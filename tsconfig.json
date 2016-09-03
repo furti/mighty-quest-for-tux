@@ -1,0 +1,15 @@
+{
+    "compilerOptions": {
+        "target": "es5",
+        "module": "commonjs",
+        "moduleResolution": "node",
+        "sourceMap": true,
+        "jsx": "react",
+        "noImplicitAny": true,
+        "outDir": "./dist"
+    },
+    "exclude": [
+        "node_modules",
+        "src/console"
+    ]
+}
