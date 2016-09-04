@@ -11,6 +11,10 @@ To build the sources, watch them for changes and start the server type
 
 ```npm start```
 
+If you need to install the type definitions because you get errors like ```Cannot find moduel 'react'``` run
+
+```npm run-script typings```
+
 If you only want to build the sources use
 
 ```npm run-script webpack```

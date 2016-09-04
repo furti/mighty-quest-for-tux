@@ -4,9 +4,11 @@
   "description": "Unix style text adventure.",
   "main": "index.html",
   "scripts": {
-    "start": "webpack && concurrently \"npm run webpack --watch\" \"npm run lite\" ",
+    "start": "webpack && concurrently \"npm run webpack --color --watch\" \"npm run lite\" ",
     "lite": "lite-server",
-    "webpack": "webpack"
+    "typings": "typings install",
+    "webpack": "webpack",
+    "postinstall": "typings"
   },
   "repository": {
     "type": "git",
@@ -29,6 +31,7 @@
     "webpack": "^1.13.2"
   },
   "dependencies": {
+    "q": "^1.4.1",
     "react": "^15.3.1",
     "react-dom": "^15.3.1"
   }
