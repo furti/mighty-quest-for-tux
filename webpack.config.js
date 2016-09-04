@@ -1,11 +1,13 @@
 module.exports = {
-    entry: "./src/Main.tsx",
+    entry: "./src/ts/Main.tsx",
     output: {
         filename: "./dist/app.js",
     },
 
+    watch: true,
+
     // Enable sourcemaps for debugging webpack's output.
-    devtool: "source-map",
+    // devtool: "source-map",
 
     resolve: {
         // Add '.ts' and '.tsx' as resolvable extensions.
@@ -27,6 +29,10 @@ module.exports = {
     // React and React DOM come as globa scripts
     externals: {
         "react": "React",
-        "react-dom": "ReactDOM"
+        "react-dom": "ReactDOM",
+        "marked": "marked",
+        "classnames": 'classNames',
+        "q": "Q",
+        "@types/base64-js": "base64js"
     }
 };
