@@ -1,0 +1,1 @@
+export declare type HotkeyHandler = (event: KeyboardEvent) => boolean;

@@ -1,0 +1,91 @@
+/**
+ * Console
+ */
+
+#console-container {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  align-items: center;
+  padding: 20px;
+}
+
+.console {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: hidden;
+  width: 900px;
+  background: #002B36;
+  color: #EEE8D5;
+  font-family: Consolas;
+}
+.console-lines {
+  flex-grow: 1;
+  padding: 0 3px;
+  overflow: auto;
+}
+.console-line p:only-child {
+  margin: 0;
+}
+.console-line p {
+  margin: 0 0 1em 0;
+}
+.console-line strong {
+  color: #3182A4;
+  font-weight: normal;
+}
+.console-line hr {
+  border: 0;
+  border-bottom-style: dashed;
+  border-bottom-width: 1px;
+}
+.console-input {
+  display: flex;
+  flex-direction: column;
+  flex-shrink: 0;
+  border-top-style: solid;
+  border-top-width: 1px;
+  padding: 5px 3px;
+}
+.console-input .input-container {
+  display: flex;
+  flex-shrink: 0;
+}
+.console-input .prompt {
+  margin-right: 10px;
+}
+.console-input textarea {
+  flex-grow: 1;
+  background: inherit;
+  border: none;
+  outline: none;
+  color: inherit;
+  resize: none;
+  height: auto;
+  font-size: 14px;
+  overflow: hidden;
+}
+.autocomplete {
+  position: relative;
+  ;
+}
+.autocomplete ul {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  max-height: 300px;
+  margin: 6px 0;
+  padding: 0;
+  background-color: #EEE8D5;
+  color: #002B36;
+}
+.autocomplete ul li {
+  list-style: none;
+  padding: 3px;
+}
+.autocomplete ul li.active {
+  color: #3182A4;
+  background-color: #003D4D;
+}
