@@ -21,11 +21,12 @@ import * as commands from './commands/AllCommands'
  * Use the load method to load the content for the console.
  */
 export class Console {
+    private basePath: string;
+
     private consoleView: ConsoleView;
     private contentLoaded: Promise<ConsoleContent>;
     private consoleConnected: Deferred<void>;
     private consoleDeferred: Deferred<Console>;
-    private consoleName: string;
     private running: boolean;
     private content: ConsoleContent;
     private contexts: ConsoleContext[];
@@ -37,8 +38,8 @@ export class Console {
      * @param  {string} consoleName The name of the console is used to load the content for the console from the server. The URL constructed is /console/<consoleName>.
      * @return {Console}            The Console.
      */
-    constructor(consoleName: string) {
-        this.consoleName = consoleName;
+    constructor(basePath: string) {
+        this.basePath = basePath;
         this.contexts = [];
         this.events = new Events();
         this.on = new ConsoleEventRegistrar(this.events);
@@ -52,14 +53,15 @@ export class Console {
      *
      * If the console is already running, the deferred will be returned.
      *
+     * @param consoleName {string} the name of the console to start
      * @return {Promise<void>} the promise that gets resolved when the console is shown.
      */
-    public start(): Promise<Console> {
+    public start(consoleName: string): Promise<Console> {
         if (this.running) {
             return this.consoleDeferred.promise;
         }
 
-        this.load();
+        this.load(consoleName);
         this.consoleDeferred = defer<Console>();
         this.running = true;
 
@@ -87,8 +89,8 @@ export class Console {
     /**
      * Loads the content for the console.
      */
-    private load(): void {
-        var path = '/console/' + this.consoleName + '/content.json';
+    private load(consoleName: string): void {
+        var path = `${this.basePath}/${consoleName}/content.json`;
 
         var contentLoadDefered = defer<ConsoleContent>();
         this.contentLoaded = contentLoadDefered.promise;

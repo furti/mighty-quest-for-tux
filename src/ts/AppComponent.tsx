@@ -3,8 +3,8 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Console } from './console/Console';
 
-let console = new Console('intro');
-console.start();
+let console = new Console('dist/content');
+console.start('intro');
 
 export class AppComponent extends React.Component<{}, {}> {
     render(): JSX.Element {
