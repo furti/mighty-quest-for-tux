@@ -16,6 +16,9 @@
     "url": "git+https://github.com/furti/mighty-quest-for-tux.git"
   },
   "author": "Daniel Furtlehner",
+  "contributors": [
+    "Manfred Hantschel"
+  ],
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/furti/mighty-quest-for-tux/issues"
