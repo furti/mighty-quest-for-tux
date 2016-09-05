@@ -1,3 +1,5 @@
+var CopyWebpackPlugin = require('copy-webpack-plugin');
+
 module.exports = {
     entry: "./src/ts/Main.tsx",
     output: {
@@ -34,5 +36,17 @@ module.exports = {
         "classnames": 'classNames',
         "q": "Q",
         "@types/base64-js": "base64js"
-    }
+    },
+
+    plugins: [
+        new CopyWebpackPlugin([
+            { from: './node_modules/react/dist/react.js', to: './dist/react.js' },
+            { from: './node_modules/react-dom/dist/react-dom.js', to: './dist/react-dom.js' },
+            { from: './node_modules/classnames/index.js', to: './dist/classnames.js' },
+            { from: './node_modules/marked/marked.min.js', to: './dist/marked.min.js' },
+            { from: './node_modules/text-encoder-lite/index.js', to: './dist/text-encoder-lite.js' },
+            { from: './node_modules/base64-js/base64js.min.js', to: './dist/base64js.min.js' },
+            { from: './node_modules/fast-levenshtein/levenshtein.js', to: './dist/levenshtein.js' }
+        ], { copyUnmodified: true })
+    ]
 };
