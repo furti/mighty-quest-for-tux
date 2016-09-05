@@ -9,7 +9,7 @@ console.start('intro');
 export class AppComponent extends React.Component<{}, {}> {
     render(): JSX.Element {
         return <div className="layout-row layout-grow">
-            <h1>The mighty quest for Tux</h1>
+            <h1 className="title">The mighty quest for Tux</h1>
             <div id="console-container">
                 {
                     console.render()
