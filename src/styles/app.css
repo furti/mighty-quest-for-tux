@@ -3,6 +3,13 @@ html, body {
     width: 100%;
     margin: 0;
     padding: 0;
+    background-color: #0F0F0F;
+    font-family: Consolas;
+    color: #EEE8D5;
+}
+
+.title {
+    align-self: center;
 }
 
 .layout-row {
