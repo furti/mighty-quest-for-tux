@@ -147,6 +147,10 @@ export class Console {
         }
     }
 
+    public executeCommand(command: string): void {
+        this.getCurrentContext().executeCommand(command);
+    }
+
     public scrollTop(): void {
         this.consoleView.scrollTop();
     }

@@ -1,0 +1,10 @@
+{
+    "executables": [
+        {
+            "command": "credits",
+            "helpText": "show the credits",
+            "file": "credits.ts",
+            "runNamespace": "intro.credits"
+        }
+    ]
+}

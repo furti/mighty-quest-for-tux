@@ -1,0 +1,10 @@
+{
+  "compilerOptions": {
+    "target": "es5",
+    "module": "commonjs",
+    "noEmitHelpers": true,
+    "noLib": true
+  },
+  "exclude": [],
+  "compileOnSave": false
+}
