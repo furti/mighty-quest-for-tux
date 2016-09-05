@@ -46,7 +46,8 @@ module.exports = {
             { from: './node_modules/marked/marked.min.js', to: './dist/marked.min.js' },
             { from: './node_modules/text-encoder-lite/index.js', to: './dist/text-encoder-lite.js' },
             { from: './node_modules/base64-js/base64js.min.js', to: './dist/base64js.min.js' },
-            { from: './node_modules/fast-levenshtein/levenshtein.js', to: './dist/levenshtein.js' }
+            { from: './node_modules/fast-levenshtein/levenshtein.js', to: './dist/levenshtein.js' },
+            { from: './node_modules/q/q.js', to: './dist/q.js' }
         ], { copyUnmodified: true })
     ]
 };
