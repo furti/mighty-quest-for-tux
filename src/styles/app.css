@@ -12,6 +12,7 @@ html, body {
 
 .layout-grow {
     flex: 1;
+    overflow: hidden;
 }
 
 .layout-center {
