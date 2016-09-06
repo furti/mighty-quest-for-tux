@@ -83,7 +83,7 @@
 	        _super.apply(this, arguments);
 	    }
 	    AppComponent.prototype.render = function () {
-	        return React.createElement("div", {className: "layout-row layout-grow"}, React.createElement("h1", null, "The mighty quest for Tux"), React.createElement("div", {id: "console-container"}, console.render()));
+	        return React.createElement("div", {className: "layout-row layout-grow"}, React.createElement("h1", {className: "title"}, "The mighty quest for Tux"), React.createElement("div", {id: "console-container"}, console.render()));
 	    };
 	    return AppComponent;
 	}(React.Component));
@@ -270,10 +270,9 @@
 	    };
 	    Console.prototype.registerDefaultCommands = function () {
 	        var currentContext = this.getCurrentContext();
-	        var read = new commands.Read(this);
-	        currentContext.registerCommand(commands.Read.command, read, read);
-	        currentContext.registerCommand(commands.Exit.command, new commands.Exit(this));
-	        currentContext.registerCommand(commands.List.command, new commands.List(this));
+	        var cat = new commands.Cat(this);
+	        currentContext.registerCommand(commands.Cat.command, cat, cat);
+	        currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
 	    };
 	    /**
 	     * Displays the console on the screen and sets up all event handlers.
@@ -56320,14 +56319,12 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Read_1 = __webpack_require__(31);
-	exports.Read = Read_1.Read;
+	var Cat_1 = __webpack_require__(31);
+	exports.Cat = Cat_1.Cat;
 	var MarkdownReader_1 = __webpack_require__(32);
 	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
-	var List_1 = __webpack_require__(34);
-	exports.List = List_1.List;
-	var Exit_1 = __webpack_require__(35);
-	exports.Exit = Exit_1.Exit;
+	var Ls_1 = __webpack_require__(34);
+	exports.Ls = Ls_1.Ls;
 
 
 /***/ },
@@ -56339,14 +56336,14 @@
 	/**
 	 * Command to read a file.
 	 */
-	var Read = (function () {
-	    function Read(console) {
+	var Cat = (function () {
+	    function Cat(console) {
 	        this.console = console;
 	    }
-	    Read.prototype.quit = function () {
+	    Cat.prototype.quit = function () {
 	        this.console.closeCurrentContext();
 	    };
-	    Read.prototype.executeCommand = function (context) {
+	    Cat.prototype.executeCommand = function (context) {
 	        if (!context.arguments) {
 	            this.console.printLine('a filename argument is required. use **read filename** to read a file.');
 	            return;
@@ -56369,7 +56366,7 @@
 	        this.registerCommands(consoleContext);
 	        this.reader.performRead();
 	    };
-	    Read.prototype.autocomplete = function (argumentName) {
+	    Cat.prototype.autocomplete = function (argumentName) {
 	        if (argumentName === 'file') {
 	            var files = this.console.getFiles();
 	            if (!files) {
@@ -56381,15 +56378,15 @@
 	        }
 	        return [];
 	    };
-	    Read.prototype.registerCommands = function (consoleContext) {
+	    Cat.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
 	        consoleContext.registerCommand({
 	            command: 'quit',
 	            helpText: 'Close the current file.'
 	        }, function (context) { return _this.quit(); });
 	    };
-	    Read.command = {
-	        command: 'read',
+	    Cat.command = {
+	        command: 'cat',
 	        helpText: 'Shows the content of a file.',
 	        arguments: [{
 	                name: 'file',
@@ -56397,9 +56394,9 @@
 	                helpText: 'The name of the file to show.'
 	            }]
 	    };
-	    return Read;
+	    return Cat;
 	}());
-	exports.Read = Read;
+	exports.Cat = Cat;
 
 
 /***/ },
@@ -56454,11 +56451,11 @@
 	/**
 	 * Command to list all available files.
 	 */
-	var List = (function () {
-	    function List(console) {
+	var Ls = (function () {
+	    function Ls(console) {
 	        this.console = console;
 	    }
-	    List.prototype.executeCommand = function (context) {
+	    Ls.prototype.executeCommand = function (context) {
 	        var _this = this;
 	        var files = this.console.getFiles();
 	        if (!files || files.length == 0) {
@@ -56470,19 +56467,19 @@
 	            _this.console.printLine(_this.printFile(file));
 	        });
 	    };
-	    List.prototype.printFile = function (file) {
+	    Ls.prototype.printFile = function (file) {
 	        return "" + this.readpermission(file) + this.writepermission(file) + this.executepermission(file) + " " + file.name + file.ext;
 	    };
-	    List.prototype.readpermission = function (file) {
+	    Ls.prototype.readpermission = function (file) {
 	        return file.readable ? 'r' : '-';
 	    };
-	    List.prototype.writepermission = function (file) {
+	    Ls.prototype.writepermission = function (file) {
 	        return file.writeable ? 'w' : '-';
 	    };
-	    List.prototype.executepermission = function (file) {
+	    Ls.prototype.executepermission = function (file) {
 	        return file.executable ? 'e' : '-';
 	    };
-	    List.prototype.filterFiles = function (files, commandArgs) {
+	    Ls.prototype.filterFiles = function (files, commandArgs) {
 	        //Also show hidden files if the users wants it
 	        if (commandArgs && commandArgs['all'] === 'all') {
 	            return files;
@@ -56492,8 +56489,8 @@
 	            return file.name.charAt(0) !== '.';
 	        });
 	    };
-	    List.command = {
-	        command: 'list',
+	    Ls.command = {
+	        command: 'ls',
 	        helpText: 'List files inside the terminal.',
 	        arguments: [{
 	                name: 'all',
@@ -56501,33 +56498,9 @@
 	                helpText: 'Also shows hidden files if specified.'
 	            }]
 	    };
-	    return List;
+	    return Ls;
 	}());
-	exports.List = List;
-
-
-/***/ },
-/* 35 */
-/***/ function(module, exports) {
-
-	"use strict";
-	/**
-	 * Command to read a file.
-	 */
-	var Exit = (function () {
-	    function Exit(console) {
-	        this.console = console;
-	    }
-	    Exit.prototype.executeCommand = function (context) {
-	        this.console.close();
-	    };
-	    Exit.command = {
-	        command: 'exit',
-	        helpText: 'Close the console'
-	    };
-	    return Exit;
-	}());
-	exports.Exit = Exit;
+	exports.Ls = Ls;
 
 
 /***/ }
