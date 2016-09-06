@@ -222,10 +222,9 @@ export class Console {
     private registerDefaultCommands(): void {
         var currentContext = this.getCurrentContext();
 
-        var read = new commands.Read(this);
-        currentContext.registerCommand(commands.Read.command, read, read);
-        currentContext.registerCommand(commands.Exit.command, new commands.Exit(this));
-        currentContext.registerCommand(commands.List.command, new commands.List(this));
+        var cat = new commands.Cat(this);
+        currentContext.registerCommand(commands.Cat.command, cat, cat);
+        currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
     }
 
     /**
