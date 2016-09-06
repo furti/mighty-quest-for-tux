@@ -12,11 +12,11 @@ import { MarkdownReader } from './MarkdownReader';
 /**
  * Command to read a file.
  */
-export class Read {
+export class Cat {
     private reader: Reader;
 
     public static command: Command = {
-        command: 'read',
+        command: 'cat',
         helpText: 'Shows the content of a file.',
         arguments: [{
             name: 'file',

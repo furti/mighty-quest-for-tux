@@ -1,9 +1,7 @@
-import {Read} from './Read';
+import { Cat } from './Cat';
 import { MarkdownReader } from './MarkdownReader';
-import { List } from './List';
-import { Exit } from './Exit';
+import { Ls } from './Ls';
 
-export {Read as Read};
+export {Cat as Cat};
 export {MarkdownReader as MarkdownReader};
-export {List as List};
-export {Exit as Exit};
+export {Ls as Ls};

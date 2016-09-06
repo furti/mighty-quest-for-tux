@@ -68,4 +68,19 @@ List of files that can not be read by the user. Files can be read by default.
 #### *.ts
 Typescript files can be used to create executables for a certain level.
 
-_TODO: Document_
+To execute a typescript file add them to the ```executables``` section of the config.json file.
+
+1. Add a import to the console file on top of the script
+2. Add the code in a namespace. The name of the namespace must be the same as the ```runNamespace``` property in the executable config.
+3. Add your code inside the namespace.
+4. export a function that takes the commandParams as argument and returns void. This function is executed when the user enters your command in the console.
+
+```typescript
+import { console } from '../console';
+
+namespace intro.credits {
+    export function run(commandParams: console.CommandParams): void {
+        commandParams.console.executeCommand('read credits.md');
+    }
+}
+```

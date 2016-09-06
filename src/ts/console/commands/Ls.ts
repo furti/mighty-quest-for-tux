@@ -6,9 +6,9 @@ import { ConsoleFile } from '../ConsoleFile';
 /**
  * Command to list all available files.
  */
-export class List {
+export class Ls {
     public static command: Command = {
-        command: 'list',
+        command: 'ls',
         helpText: 'List files inside the terminal.',
         arguments: [{
             name: 'all',
