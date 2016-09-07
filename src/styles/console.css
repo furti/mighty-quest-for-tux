@@ -21,6 +21,11 @@
   color: #EEE8D5;
   font-family: Consolas;
 }
+
+.console h1, h2, h3, h4, h5, h6 {
+    color: #6C71C4;
+}
+
 .console-lines {
   flex-grow: 1;
   padding: 0 3px;
