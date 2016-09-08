@@ -76,6 +76,9 @@
 	var React = __webpack_require__(1);
 	var Console_1 = __webpack_require__(4);
 	var console = new Console_1.Console('dist/content');
+	console.on('server.connect', function (serverName) {
+	    alert(serverName);
+	});
 	console.start('intro');
 	var AppComponent = (function (_super) {
 	    __extends(AppComponent, _super);
@@ -98,10 +101,10 @@
 	var React = __webpack_require__(1);
 	var q_1 = __webpack_require__(5);
 	var ConsoleContext_1 = __webpack_require__(6);
-	var ConsoleEventRegistrar_1 = __webpack_require__(10);
 	var ConsoleView_1 = __webpack_require__(11);
 	var Events_1 = __webpack_require__(17);
 	var Base64_1 = __webpack_require__(18);
+	var ConsoleEvent_1 = __webpack_require__(9);
 	var ConsoleExecutableHandler_1 = __webpack_require__(20);
 	var Http_1 = __webpack_require__(27);
 	var commands = __webpack_require__(30);
@@ -120,7 +123,6 @@
 	        this.basePath = basePath;
 	        this.contexts = [];
 	        this.events = new Events_1.Events();
-	        this.on = new ConsoleEventRegistrar_1.ConsoleEventRegistrar(this.events);
 	    }
 	    /**
 	     * This method displays the console. This method can safely be called at any time.
@@ -157,6 +159,18 @@
 	            _this.consoleDeferred.reject(_this);
 	        });
 	        return this.consoleDeferred.promise;
+	    };
+	    Console.prototype.onClose = function (handler) {
+	        this.on(ConsoleEvent_1.ConsoleEvent.CLOSE, handler);
+	    };
+	    Console.prototype.onCommandExecuted = function (handler) {
+	        this.on(ConsoleEvent_1.ConsoleEvent.COMMAND_EXECUTED, handler);
+	    };
+	    Console.prototype.on = function (event, handler) {
+	        this.events.on(event, handler);
+	    };
+	    Console.prototype.fire = function (event, data) {
+	        this.events.fire(event, data);
 	    };
 	    /**
 	     * Loads the content for the console.
@@ -216,7 +230,7 @@
 	        this.consoleView.scrollTop();
 	    };
 	    Console.prototype.close = function () {
-	        this.events.fire(1 /* CLOSE */);
+	        this.events.fire(ConsoleEvent_1.ConsoleEvent.CLOSE);
 	    };
 	    Console.prototype.startContext = function (config) {
 	        var newContext = new ConsoleContext_1.ConsoleContext(this.contexts.length, this, config);
@@ -313,7 +327,8 @@
 	"use strict";
 	var ConsoleEngine_1 = __webpack_require__(7);
 	var CommandExecutionState_1 = __webpack_require__(8);
-	var Logger_1 = __webpack_require__(9);
+	var ConsoleEvent_1 = __webpack_require__(9);
+	var Logger_1 = __webpack_require__(10);
 	var ConsoleContext = (function () {
 	    function ConsoleContext(id, connectedConsole, config) {
 	        this.lines = [];
@@ -332,7 +347,7 @@
 	        }
 	        else {
 	            Logger_1.Logger.debug('ConsoleContext', "Fire COMMAND_EXECUTED for result %o", result);
-	            this.console.events.fire(2 /* COMMAND_EXECUTED */, result.command);
+	            this.console.fire(ConsoleEvent_1.ConsoleEvent.COMMAND_EXECUTED, result.command);
 	        }
 	    };
 	    ConsoleContext.prototype.autocomplete = function (current) {
@@ -605,6 +620,21 @@
 /***/ function(module, exports) {
 
 	"use strict";
+	var ConsoleEvent = (function () {
+	    function ConsoleEvent() {
+	    }
+	    ConsoleEvent.CLOSE = 'console.close';
+	    ConsoleEvent.COMMAND_EXECUTED = 'console.commandexecuted';
+	    return ConsoleEvent;
+	}());
+	exports.ConsoleEvent = ConsoleEvent;
+
+
+/***/ },
+/* 10 */
+/***/ function(module, exports) {
+
+	"use strict";
 	var Logger = (function () {
 	    function Logger() {
 	    }
@@ -639,26 +669,6 @@
 	    return Logger;
 	}());
 	exports.Logger = Logger;
-
-
-/***/ },
-/* 10 */
-/***/ function(module, exports) {
-
-	"use strict";
-	var ConsoleEventRegistrar = (function () {
-	    function ConsoleEventRegistrar(events) {
-	        this.events = events;
-	    }
-	    ConsoleEventRegistrar.prototype.commandExecuted = function (handler) {
-	        this.events.on(2 /* COMMAND_EXECUTED */, handler);
-	    };
-	    ConsoleEventRegistrar.prototype.close = function (handler) {
-	        this.events.on(1 /* CLOSE */, handler);
-	    };
-	    return ConsoleEventRegistrar;
-	}());
-	exports.ConsoleEventRegistrar = ConsoleEventRegistrar;
 
 
 /***/ },
@@ -999,14 +1009,14 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Logger_1 = __webpack_require__(9);
+	var Logger_1 = __webpack_require__(10);
 	var Events = (function () {
 	    function Events() {
 	        this.eventHandlers = {};
 	    }
 	    /**
 	     * Fires all registered Event handlers in the chain.
-	     * @param {number} eventName the event to fire.
+	     * @param {string} eventName the event to fire.
 	     * @param {any} event the parameters that are supplied to the event
 	     */
 	    Events.prototype.fire = function (eventName, data) {
@@ -1022,7 +1032,7 @@
 	    /**
 	     * Register a event handler for the given event.
 	     * Multiple event handlers can be registered for a single event. They will be called in the order they where registered.
-	     * @param {number}       event   the event
+	     * @param {string}       event   the event
 	     * @param {EventHandler} handler the handler function
 	     */
 	    Events.prototype.on = function (event, handler) {
@@ -1120,7 +1130,7 @@
 
 	"use strict";
 	var typescript_1 = __webpack_require__(22);
-	var Logger_1 = __webpack_require__(9);
+	var Logger_1 = __webpack_require__(10);
 	var CodeEngine = (function () {
 	    function CodeEngine() {
 	    }
