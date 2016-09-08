@@ -125,8 +125,11 @@ function createConsoleContent() {
     });
 }
 
-// createConsoleContent();
-
-watch.watchTree('./src/content', function() {
+if (process.argv.indexOf('--watching') !== -1) {
+    watch.watchTree('./src/content', function() {
+        createConsoleContent();
+    });
+}
+else {
     createConsoleContent();
-});
+}
