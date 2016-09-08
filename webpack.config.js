@@ -6,7 +6,7 @@ module.exports = {
         filename: "./dist/app.js",
     },
 
-    watch: true,
+    watch: process.argv.indexOf('--watching') !== -1,
 
     // Enable sourcemaps for debugging webpack's output.
     // devtool: "source-map",

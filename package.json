@@ -4,11 +4,13 @@
   "description": "Unix style text adventure.",
   "main": "index.html",
   "scripts": {
-    "start": "concurrently \"npm run webpack\" \"npm run parse-content\" \"npm run lite\" ",
+    "start": "concurrently \"npm run webpack-watch\" \"npm run parse-content-watch\" \"npm run lite\" ",
     "lite": "lite-server",
     "typings": "typings install",
     "parse-content": "node parse-content.js",
+    "parse-content-watch": "node parse-content.js --watching",
     "webpack": "webpack",
+    "webpack-watch": "webpack --watching",
     "postinstall": "typings"
   },
   "repository": {

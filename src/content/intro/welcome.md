@@ -17,6 +17,6 @@ some of your valuable time and check out the **credits**.
 To start enter **connect** into the textfield below and hit enter.
 
 A list of servers you can connect to will be shown.
-You have to choose one by entering the servers number in the textfield.
+You have to choose one by entering the servers name in the textfield.
 
 So have fun and do a great job :)

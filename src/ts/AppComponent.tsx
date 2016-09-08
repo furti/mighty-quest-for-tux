@@ -4,6 +4,11 @@ import { Component } from 'react';
 import { Console } from './console/Console';
 
 let console = new Console('dist/content');
+
+console.on('server.connect', (serverName: string) => {
+    alert(serverName);
+});
+
 console.start('intro');
 
 export class AppComponent extends React.Component<{}, {}> {

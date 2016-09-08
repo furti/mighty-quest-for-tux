@@ -5,6 +5,12 @@
             "helpText": "show the credits",
             "file": "credits.ts",
             "runNamespace": "intro.credits"
+        },
+        {
+            "command": "connect",
+            "helpText": "connect to servers",
+            "file": "connect.ts",
+            "runNamespace": "intro.connect"
         }
     ]
 }
