@@ -3,10 +3,10 @@ import {Promise, Deferred, defer, all} from 'q'
 
 import {Executable} from './Executable'
 import {ConsoleContext} from './ConsoleContext'
-import {ConsoleEventRegistrar} from './ConsoleEventRegistrar'
 import {ConsoleFile} from './ConsoleFile'
 import {ConsoleView} from './ConsoleView'
 import {Events} from './Events'
+import {EventHandler} from './EventHandler'
 import {Base64} from './Base64'
 import {ConsoleEvent} from './ConsoleEvent'
 import {ConsoleExecutableHandler} from './ConsoleExecutableHandler'
@@ -30,8 +30,7 @@ export class Console {
     private running: boolean;
     private content: ConsoleContent;
     private contexts: ConsoleContext[];
-    public events: Events;
-    public on: ConsoleEventRegistrar;
+    private events: Events;
 
     /**
      * Constructs a new console with the given name.
@@ -42,7 +41,6 @@ export class Console {
         this.basePath = basePath;
         this.contexts = [];
         this.events = new Events();
-        this.on = new ConsoleEventRegistrar(this.events);
     }
 
     /**
@@ -84,6 +82,22 @@ export class Console {
         });
 
         return this.consoleDeferred.promise;
+    }
+
+    public onClose(handler: EventHandler): void {
+        this.on(ConsoleEvent.CLOSE, handler);
+    }
+
+    public onCommandExecuted(handler: EventHandler): void {
+        this.on(ConsoleEvent.COMMAND_EXECUTED, handler);
+    }
+
+    public on(event: string, handler: EventHandler): void {
+        this.events.on(event, handler);
+    }
+
+    public fire(event: string, data?: any): void {
+        this.events.fire(event, data);
     }
 
     /**

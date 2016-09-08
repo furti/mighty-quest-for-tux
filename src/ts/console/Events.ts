@@ -3,14 +3,14 @@ import { EventHandler } from './EventHandler';
 import { Logger } from './Logger';
 
 export class Events {
-    private eventHandlers: { [event: number]: EventHandler[] } = {};
+    private eventHandlers: { [event: string]: EventHandler[] } = {};
 
     /**
      * Fires all registered Event handlers in the chain.
-     * @param {number} eventName the event to fire.
+     * @param {string} eventName the event to fire.
      * @param {any} event the parameters that are supplied to the event
      */
-    public fire(eventName: number, data?: any): void {
+    public fire(eventName: string, data?: any): void {
         if (!this.eventHandlers[eventName]) {
             Logger.debug('Events', `No event handler for ${eventName} registered.`);
             return;
@@ -25,10 +25,10 @@ export class Events {
     /**
      * Register a event handler for the given event.
      * Multiple event handlers can be registered for a single event. They will be called in the order they where registered.
-     * @param {number}       event   the event
+     * @param {string}       event   the event
      * @param {EventHandler} handler the handler function
      */
-    public on(event: number, handler: EventHandler): void {
+    public on(event: string, handler: EventHandler): void {
         if (!this.eventHandlers[event]) {
             this.eventHandlers[event] = [];
         }

@@ -36,7 +36,7 @@ export class ConsoleContext {
         }
         else {
             Logger.debug('ConsoleContext', `Fire COMMAND_EXECUTED for result %o`, result);
-            this.console.events.fire(ConsoleEvent.COMMAND_EXECUTED, result.command);
+            this.console.fire(ConsoleEvent.COMMAND_EXECUTED, result.command);
         }
     }
 

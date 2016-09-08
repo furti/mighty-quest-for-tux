@@ -1,4 +1,4 @@
-export const enum ConsoleEvent {
-    CLOSE = 1,
-    COMMAND_EXECUTED = 2
+export class ConsoleEvent {
+    static CLOSE = 'console.close';
+    static COMMAND_EXECUTED = 'console.commandexecuted';
 }
