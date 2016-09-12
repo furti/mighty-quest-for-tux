@@ -14,6 +14,8 @@ We simply write text in here to tell our machine what to do. If you know what yo
 This sounds all really serious but don't be afraid. It's still a game. So maybe you can sacrifice 
 some of your valuable time and check out the **credits**.
 
+You can type **help** into the console at any time to see all the available commands.
+
 To start enter **connect** into the textfield below and hit enter.
 
 A list of servers you can connect to will be shown.

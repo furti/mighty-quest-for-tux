@@ -1,0 +1,10 @@
+{
+    "executables": [
+        {
+            "command": "server_status",
+            "helpText": "show the state of all applications",
+            "file": "status.ts",
+            "runNamespace": "blueberry.status"
+        }
+    ]
+}

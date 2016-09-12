@@ -5,8 +5,13 @@ import { Console } from './console/Console';
 
 let console = new Console('dist/content');
 
-console.on('server.connect', (serverName: string) => {
-    alert(serverName);
+console.on('server.connect', (folder: string) => {
+    console.close();
+    console.start(folder);
+});
+
+console.on('level.complete', (levelName: string) => {
+    alert(`${levelName} complete`);
 });
 
 console.start('intro');

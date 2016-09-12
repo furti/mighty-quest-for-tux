@@ -171,6 +171,7 @@ export class Console {
 
     public close(): void {
         this.events.fire(ConsoleEvent.CLOSE);
+        this.running = false;
     }
 
     public startContext(config: ConsoleContextConfig): ConsoleContext {
@@ -248,6 +249,10 @@ export class Console {
      */
     private show(): void {
         this.consoleConnected = defer<void>();
+
+        if (this.consoleView) {
+            this.consoleConnected.resolve();
+        }
     }
 
     private connectConsoleView(consoleView: ConsoleView): void {
