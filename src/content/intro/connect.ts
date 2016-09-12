@@ -9,7 +9,7 @@ namespace intro.connect {
 
     let servers: Server[] = [{
         name: 'blueberry',
-        description: '',
+        description: 'Memory is getting low',
         folder: 'blueberry'
     }];
 
