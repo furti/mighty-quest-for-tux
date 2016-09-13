@@ -3,6 +3,15 @@ import {Component} from 'react';
 import * as marked from 'marked';
 
 import {MarkdownParagraphProps} from './MarkdownParagraphProps';
+import {Logger} from './Logger';
+
+const markdownRenderer = new marked.Renderer();
+
+markdownRenderer.paragraph = (text): string => {
+    Logger.debug('Markdown', text);
+
+    return MarkdownParagraphParser.parse(text);
+}
 
 export class MarkdownParagraph extends Component<MarkdownParagraphProps, {}>{
 
@@ -13,7 +22,8 @@ export class MarkdownParagraph extends Component<MarkdownParagraphProps, {}>{
         if (!this.renderedContent) {
             this.renderedContent = marked(this.props.markdownContent, {
                 gfm: true,
-                breaks: true
+                breaks: true,
+                renderer: markdownRenderer
             });
         }
 

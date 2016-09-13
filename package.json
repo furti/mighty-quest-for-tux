@@ -4,13 +4,15 @@
   "description": "Unix style text adventure.",
   "main": "index.html",
   "scripts": {
-    "start": "concurrently \"npm run webpack-watch\" \"npm run parse-content-watch\" \"npm run lite\" ",
+    "start": "concurrently \"npm run webpack-watch\" \"npm run parse-content-watch\" \"npm run parser-watch\" \"npm run lite\" ",
     "lite": "lite-server",
     "typings": "typings install",
     "parse-content": "node parse-content.js",
     "parse-content-watch": "node parse-content.js --watching",
     "webpack": "webpack",
     "webpack-watch": "webpack --watching",
+    "parser": "node create-parsers.js",
+    "parser-watch": "node create-parsers.js --watching",
     "postinstall": "typings"
   },
   "repository": {
@@ -34,6 +36,7 @@
     "html-webpack-plugin": "^2.22.0",
     "lite-server": "^2.2.2",
     "mkdirp": "^0.5.1",
+    "pegjs": "^0.10.0",
     "source-map-loader": "^0.1.5",
     "ts-loader": "^0.8.2",
     "typings": "^1.3.3",

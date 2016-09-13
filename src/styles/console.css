@@ -95,3 +95,15 @@
   color: #3182A4;
   background-color: #003D4D;
 }
+
+span.green {
+  color: #859900;
+}
+
+span.red {
+  color: #DC322F;
+}
+
+span.blue {
+  color: #268BD2;
+}
