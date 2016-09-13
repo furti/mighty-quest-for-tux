@@ -984,6 +984,12 @@
 	var React = __webpack_require__(1);
 	var react_1 = __webpack_require__(1);
 	var marked = __webpack_require__(16);
+	var Logger_1 = __webpack_require__(10);
+	var markdownRenderer = new marked.Renderer();
+	markdownRenderer.paragraph = function (text) {
+	    Logger_1.Logger.debug('Markdown', text);
+	    return MarkdownParagraphParser.parse(text);
+	};
 	var MarkdownParagraph = (function (_super) {
 	    __extends(MarkdownParagraph, _super);
 	    function MarkdownParagraph() {
@@ -993,7 +999,8 @@
 	        if (!this.renderedContent) {
 	            this.renderedContent = marked(this.props.markdownContent, {
 	                gfm: true,
-	                breaks: true
+	                breaks: true,
+	                renderer: markdownRenderer
 	            });
 	        }
 	        return this.renderedContent;
