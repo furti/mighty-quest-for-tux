@@ -1,7 +1,7 @@
-import { Cat } from './Cat';
+import { Less } from './Less';
 import { MarkdownReader } from './MarkdownReader';
 import { Ls } from './Ls';
 
-export {Cat as Cat};
+export {Less as Less};
 export {MarkdownReader as MarkdownReader};
 export {Ls as Ls};
