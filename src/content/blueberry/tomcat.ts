@@ -1,6 +1,6 @@
 import { console } from '../console';
 
-namespace blueberry.status {
+namespace blueberry.tomcat {
     interface Application {
         name: string;
         memory: string;
@@ -53,8 +53,16 @@ namespace blueberry.status {
     export function run(commandParams: console.CommandParams): void {
         let console = commandParams.console;
 
-        applications.forEach(application => {
-            console.printLine(`${application.name} - ${colorize(application)} / ${application.memory}`);
-        });
+        if (commandParams.arguments[0] === 'status') {
+            applications.forEach(application => {
+                console.printLine(`${application.name} - ${colorize(application)} / ${application.memory}`);
+            });
+        }
+        else if (commandParams.arguments[0] === 'restart') {
+            let application: string = commandParams.arguments[1];
+        }
+        else {
+            console.printLine(`Unknown argument ${commandParams.arguments[0]}`);
+        }
     }
 }

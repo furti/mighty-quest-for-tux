@@ -51,16 +51,8 @@ return (function(){
         Logger.debug('CodeEngine', 'runconfig: %o', runConfig);
 
         return {
-            // game: otterside.game,
-            // gameManager: otterside.gameManager,
-            // gameStates: {
-            //     PreloadState: PreloadState.stateName,
-            //     BootState: BootState.stateName,
-            //     MainMenuState: MainMenuState.stateName,
-            //     PlayState: PlayState.stateName
-            // },
             console: runConfig.console,
-            arguments: runConfig.context.arguments || {}
+            arguments: runConfig.context.arguments || []
         }
     }
 

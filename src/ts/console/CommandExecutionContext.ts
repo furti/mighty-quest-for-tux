@@ -1,3 +1,3 @@
 export interface CommandExecutionContext {
-    arguments?: { [name: string]: any };
+    arguments?: any[];
 }

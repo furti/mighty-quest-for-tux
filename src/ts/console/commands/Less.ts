@@ -41,7 +41,7 @@ export class Less {
             return;
         }
 
-        var fileName = context.arguments['file'] as string;
+        var fileName = context.arguments[0] as string;
 
         var file = this.console.getFile(fileName);
 
@@ -65,8 +65,8 @@ export class Less {
         this.reader.performRead();
     }
 
-    public autocomplete(argumentName: string): string[] {
-        if (argumentName === 'file') {
+    public autocomplete(args: string[]): string[] {
+        if (args.length <= 1) {
             var files = this.console.getFiles();
 
             if (!files) {

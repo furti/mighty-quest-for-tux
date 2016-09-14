@@ -1,10 +1,22 @@
 {
     "executables": [
         {
-            "command": "server_status",
+            "command": "rc_tomcat",
             "helpText": "show the state of all applications",
-            "file": "status.ts",
-            "runNamespace": "blueberry.status"
+            "file": "tomcat.ts",
+            "runNamespace": "blueberry.tomcat",
+            "arguments": [
+                {
+                    "name": "status",
+                    "required": false,
+                    "helpText": "Print the status for all applications"
+                },
+                {
+                    "name": "restart [application]",
+                    "required": false,
+                    "helpText": "Restart the given application"
+                }
+            ]
         }
     ]
 }
