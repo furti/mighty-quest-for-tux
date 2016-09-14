@@ -3,7 +3,6 @@ import { console } from '../console';
 namespace blueberry.tomcat {
     interface Application {
         name: string;
-        memory: string;
         used: string;
     }
 
@@ -14,26 +13,22 @@ namespace blueberry.tomcat {
     const applications = [
         {
             name: 'fraser',
-            memory: '1GB',
             used: random(100, 800) + 'MB'
         }, {
             name: 'fergus',
-            memory: '1GB',
             used: random(100, 800) + 'MB'
         }, {
             name: 'alister',
-            memory: '500MB',
             used: random(440, 470) + 'MB'
         }, {
             name: 'carson',
-            memory: '1GB',
             used: random(100, 800) + 'MB'
         }
     ];
 
-    function colorize(application: Application): string {
-        let memoryUnit = application.memory.substring(application.memory.length - 2);
-        let memoryValue = parseInt(application.memory.substring(0, application.memory.length - 2));
+    function colorize(application: Application, applicationMemory: string): string {
+        let memoryUnit = applicationMemory.substring(applicationMemory.length - 2);
+        let memoryValue = parseInt(applicationMemory.substring(0, applicationMemory.length - 2));
 
         let usedUnit = application.used.substring(application.used.length - 2);
         let usedValue = parseInt(application.used.substring(0, application.used.length - 2));
@@ -55,7 +50,11 @@ namespace blueberry.tomcat {
 
         if (commandParams.arguments[0] === 'status') {
             applications.forEach(application => {
-                console.printLine(`${application.name} - ${colorize(application)} / ${application.memory}`);
+                let content = console.getFileContent(`${application.name}-config.json`);
+
+                let config = JSON.parse(content);
+
+                console.printLine(`${application.name} - ${colorize(application, config.memory)} / ${config.memory}`);
             });
         }
         else if (commandParams.arguments[0] === 'restart') {

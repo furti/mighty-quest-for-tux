@@ -122,6 +122,12 @@ export class Console {
         return this.content.files[fileName];
     }
 
+    public getFileContent(fileName: string): any {
+        var file = this.getFile(fileName);
+
+        return file && file.content ? Base64.decode(file.content) : null;
+    }
+
     /**
      * Returns a list of all files inside the console.
      * @return {ConsoleFile[]} List of files

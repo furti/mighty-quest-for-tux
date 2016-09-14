@@ -18,5 +18,8 @@
                 }
             ]
         }
+    ],
+    "noRead": [
+        "tomcat.ts"
     ]
 }
