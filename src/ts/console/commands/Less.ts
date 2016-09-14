@@ -6,8 +6,7 @@ import { ConsoleFile } from '../ConsoleFile';
 import { Base64 } from '../Base64';
 import { Reader } from './Reader';
 import { MarkdownReader } from './MarkdownReader';
-
-
+import { JsonReader } from './JsonReader';
 
 /**
  * Command to read a file.
@@ -52,6 +51,9 @@ export class Less {
 
         if (file.ext === '.md') {
             this.reader = new MarkdownReader(file, this.console);
+        }
+        else if (file.ext === '.json') {
+            this.reader = new JsonReader(file, this.console);
         }
         else {
             throw `File ending ${file.ext} not supported yet`;
