@@ -122,6 +122,12 @@ export class Console {
         return this.content.files[fileName];
     }
 
+    public getFileContent(fileName: string): any {
+        var file = this.getFile(fileName);
+
+        return file && file.content ? Base64.decode(file.content) : null;
+    }
+
     /**
      * Returns a list of all files inside the console.
      * @return {ConsoleFile[]} List of files
@@ -171,6 +177,7 @@ export class Console {
 
     public close(): void {
         this.events.fire(ConsoleEvent.CLOSE);
+        this.contexts.length = 0;
         this.running = false;
     }
 
@@ -206,7 +213,7 @@ export class Console {
         this.rerenderView();
     }
 
-    private getCurrentContext(): ConsoleContext {
+    public getCurrentContext(): ConsoleContext {
         return this.contexts[this.contexts.length - 1];
     }
 
@@ -237,8 +244,8 @@ export class Console {
     private registerDefaultCommands(): void {
         var currentContext = this.getCurrentContext();
 
-        var cat = new commands.Cat(this);
-        currentContext.registerCommand(commands.Cat.command, cat, cat);
+        var less = new commands.Less(this);
+        currentContext.registerCommand(commands.Less.command, less, less);
         currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
     }
 

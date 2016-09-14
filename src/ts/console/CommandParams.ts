@@ -11,5 +11,5 @@ export interface CommandParams {
      * The list of arguments entered for this command
      * @type {string[]}
      */
-    arguments: { [name: string]: any };
+    arguments: any[];
 }

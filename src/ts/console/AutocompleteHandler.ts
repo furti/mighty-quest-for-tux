@@ -1,1 +1,1 @@
-export type AutocompleteHandler = ((argumentName: string) => string[]) | { autocomplete: (argumentName: string) => string[] };
+export type AutocompleteHandler = ((args: any[]) => string[]) | { autocomplete: (args: any[]) => string[] };

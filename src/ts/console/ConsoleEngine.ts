@@ -88,9 +88,9 @@ export class ConsoleEngine {
         }
         else {
             var currentCommand = this.commands[parsedCommand.command];
-            var possibleValues = currentCommand.autocomplete(parsedCommand.lastArgumentName);
+            var possibleValues = currentCommand.autocomplete(parsedCommand.arguments);
 
-            return this.query(parsedCommand.arguments[parsedCommand.lastArgumentName], possibleValues)
+            return this.query(parsedCommand.lastArgument, possibleValues)
                 .map((value) => {
                     return parsedCommand.command + ' ' + value;
                 });
@@ -137,10 +137,12 @@ export class ConsoleEngine {
             return;
         }
 
+        let args = parts.splice(1);
+
         return {
             command: parts[0],
-            arguments: this.createArgumentMap(parts),
-            lastArgumentName: this.getLastArgumentName(parts)
+            arguments: args.length === 0 ? null : args,
+            lastArgument: args.length > 0 ? args[args.length - 1] : null
         }
     }
 
@@ -159,29 +161,6 @@ export class ConsoleEngine {
         return command.getArgumentName(args.length - 1);
     }
 
-    private createArgumentMap(commandParts: string[]): { [name: string]: any } {
-        if (commandParts.length <= 1) {
-            return undefined;
-        }
-
-        var args = commandParts.slice(1),
-            command = this.commands[commandParts[0]],
-            paramMap: { [name: string]: any } = {};
-
-        args.forEach((argument, index) => {
-            var argumentName = command ? command.getArgumentName(index) : undefined;
-
-            if (argumentName) {
-                paramMap[argumentName] = argument;
-            }
-            else {
-                paramMap[''] = argument;
-            }
-        });
-
-        return paramMap;
-    }
-
     private showHelp(parsedCommand: ParsedCommand): void {
         if (!parsedCommand.arguments) {
 
@@ -194,7 +173,7 @@ export class ConsoleEngine {
             }
         }
         else {
-            var commandName = parsedCommand.arguments[''];
+            var commandName = parsedCommand.arguments[0];
             var command = this.commands[commandName];
 
             if (!command) {
@@ -242,13 +221,13 @@ class CommandExecutor {
         return this.command.arguments[index].name;
     }
 
-    public autocomplete(argumentName: string): string[] {
+    public autocomplete(args: any[]): string[] {
         if (this.autocompleteHandler) {
             if (typeof this.autocompleteHandler === 'function') {
-                return this.autocompleteHandler(argumentName);
+                return this.autocompleteHandler(args);
             }
             else {
-                return this.autocompleteHandler.autocomplete(argumentName);
+                return this.autocompleteHandler.autocomplete(args);
             }
         }
 

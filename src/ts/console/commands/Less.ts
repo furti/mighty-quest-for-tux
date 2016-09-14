@@ -6,17 +6,16 @@ import { ConsoleFile } from '../ConsoleFile';
 import { Base64 } from '../Base64';
 import { Reader } from './Reader';
 import { MarkdownReader } from './MarkdownReader';
-
-
+import { JsonReader } from './JsonReader';
 
 /**
  * Command to read a file.
  */
-export class Cat {
+export class Less {
     private reader: Reader;
 
     public static command: Command = {
-        command: 'cat',
+        command: 'less',
         helpText: 'Shows the content of a file.',
         arguments: [{
             name: 'file',
@@ -41,7 +40,7 @@ export class Cat {
             return;
         }
 
-        var fileName = context.arguments['file'] as string;
+        var fileName = context.arguments[0] as string;
 
         var file = this.console.getFile(fileName);
 
@@ -52,6 +51,9 @@ export class Cat {
 
         if (file.ext === '.md') {
             this.reader = new MarkdownReader(file, this.console);
+        }
+        else if (file.ext === '.json') {
+            this.reader = new JsonReader(file, this.console);
         }
         else {
             throw `File ending ${file.ext} not supported yet`;
@@ -65,8 +67,8 @@ export class Cat {
         this.reader.performRead();
     }
 
-    public autocomplete(argumentName: string): string[] {
-        if (argumentName === 'file') {
+    public autocomplete(args: string[]): string[] {
+        if (args.length <= 1) {
             var files = this.console.getFiles();
 
             if (!files) {

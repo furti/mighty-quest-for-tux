@@ -5,7 +5,7 @@ import { CommandParams } from './CommandParams';
 import { Logger } from './Logger';
 
 export class CodeEngine {
-    private static allowedGlobals = ['Math', 'NaN', 'Infinity', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'Date', 'console', 'Object'];
+    private static allowedGlobals = ['Math', 'NaN', 'Infinity', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'Date', 'console', 'Object', 'JSON'];
 
     private static compilerOptions: CompilerOptions = {
         module: ModuleKind.CommonJS,
@@ -51,16 +51,8 @@ return (function(){
         Logger.debug('CodeEngine', 'runconfig: %o', runConfig);
 
         return {
-            // game: otterside.game,
-            // gameManager: otterside.gameManager,
-            // gameStates: {
-            //     PreloadState: PreloadState.stateName,
-            //     BootState: BootState.stateName,
-            //     MainMenuState: MainMenuState.stateName,
-            //     PlayState: PlayState.stateName
-            // },
             console: runConfig.console,
-            arguments: runConfig.context.arguments || {}
+            arguments: runConfig.context.arguments || []
         }
     }
 

@@ -55,9 +55,9 @@ export class Ls {
         return file.executable ? 'e' : '-';
     }
 
-    private filterFiles(files: ConsoleFile[], commandArgs?: { [name: string]: any }): ConsoleFile[] {
+    private filterFiles(files: ConsoleFile[], commandArgs?: any[]): ConsoleFile[] {
         //Also show hidden files if the users wants it
-        if (commandArgs && commandArgs['all'] === 'all') {
+        if (commandArgs && commandArgs[0] === 'all') {
             return files;
         }
 
