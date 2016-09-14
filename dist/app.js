@@ -75,10 +75,17 @@
 	};
 	var React = __webpack_require__(1);
 	var Console_1 = __webpack_require__(4);
+	var DisconnectCommand_1 = __webpack_require__(36);
 	var console = new Console_1.Console('dist/content');
 	console.on('server.connect', function (folder) {
 	    console.close();
-	    console.start(folder);
+	    console.start(folder).then(function () {
+	        console.getCurrentContext().registerCommand(DisconnectCommand_1.Disconnect.command, new DisconnectCommand_1.Disconnect(console));
+	    });
+	});
+	console.on('server.disconnected', function () {
+	    console.close();
+	    console.start('intro');
 	});
 	console.on('level.complete', function (levelName) {
 	    alert(levelName + " complete");
@@ -194,6 +201,10 @@
 	    Console.prototype.getFile = function (fileName) {
 	        return this.content.files[fileName];
 	    };
+	    Console.prototype.getFileContent = function (fileName) {
+	        var file = this.getFile(fileName);
+	        return file && file.content ? Base64_1.Base64.decode(file.content) : null;
+	    };
 	    /**
 	     * Returns a list of all files inside the console.
 	     * @return {ConsoleFile[]} List of files
@@ -235,6 +246,7 @@
 	    };
 	    Console.prototype.close = function () {
 	        this.events.fire(ConsoleEvent_1.ConsoleEvent.CLOSE);
+	        this.contexts.length = 0;
 	        this.running = false;
 	    };
 	    Console.prototype.startContext = function (config) {
@@ -289,8 +301,8 @@
 	    };
 	    Console.prototype.registerDefaultCommands = function () {
 	        var currentContext = this.getCurrentContext();
-	        var cat = new commands.Cat(this);
-	        currentContext.registerCommand(commands.Cat.command, cat, cat);
+	        var less = new commands.Less(this);
+	        currentContext.registerCommand(commands.Less.command, less, less);
 	        currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
 	    };
 	    /**
@@ -440,8 +452,8 @@
 	        }
 	        else {
 	            var currentCommand = this.commands[parsedCommand.command];
-	            var possibleValues = currentCommand.autocomplete(parsedCommand.lastArgumentName);
-	            return this.query(parsedCommand.arguments[parsedCommand.lastArgumentName], possibleValues)
+	            var possibleValues = currentCommand.autocomplete(parsedCommand.arguments);
+	            return this.query(parsedCommand.lastArgument, possibleValues)
 	                .map(function (value) {
 	                return parsedCommand.command + ' ' + value;
 	            });
@@ -479,10 +491,11 @@
 	        if (parts.length === 0) {
 	            return;
 	        }
+	        var args = parts.splice(1);
 	        return {
 	            command: parts[0],
-	            arguments: this.createArgumentMap(parts),
-	            lastArgumentName: this.getLastArgumentName(parts)
+	            arguments: args.length === 0 ? null : args,
+	            lastArgument: args.length > 0 ? args[args.length - 1] : null
 	        };
 	    };
 	    ConsoleEngine.prototype.getLastArgumentName = function (commandParts) {
@@ -495,22 +508,6 @@
 	        }
 	        return command.getArgumentName(args.length - 1);
 	    };
-	    ConsoleEngine.prototype.createArgumentMap = function (commandParts) {
-	        if (commandParts.length <= 1) {
-	            return undefined;
-	        }
-	        var args = commandParts.slice(1), command = this.commands[commandParts[0]], paramMap = {};
-	        args.forEach(function (argument, index) {
-	            var argumentName = command ? command.getArgumentName(index) : undefined;
-	            if (argumentName) {
-	                paramMap[argumentName] = argument;
-	            }
-	            else {
-	                paramMap[''] = argument;
-	            }
-	        });
-	        return paramMap;
-	    };
 	    ConsoleEngine.prototype.showHelp = function (parsedCommand) {
 	        if (!parsedCommand.arguments) {
 	            this.console.printLine('Parameters are shown with _emphasis_. Optional parameters in [_square brackets_]');
@@ -521,7 +518,7 @@
 	            }
 	        }
 	        else {
-	            var commandName = parsedCommand.arguments[''];
+	            var commandName = parsedCommand.arguments[0];
 	            var command = this.commands[commandName];
 	            if (!command) {
 	                this.console.printLine("Command **" + commandName + "** not found!");
@@ -560,13 +557,13 @@
 	        }
 	        return this.command.arguments[index].name;
 	    };
-	    CommandExecutor.prototype.autocomplete = function (argumentName) {
+	    CommandExecutor.prototype.autocomplete = function (args) {
 	        if (this.autocompleteHandler) {
 	            if (typeof this.autocompleteHandler === 'function') {
-	                return this.autocompleteHandler(argumentName);
+	                return this.autocompleteHandler(args);
 	            }
 	            else {
-	                return this.autocompleteHandler.autocomplete(argumentName);
+	                return this.autocompleteHandler.autocomplete(args);
 	            }
 	        }
 	        return [];
@@ -1170,16 +1167,8 @@
 	    CodeEngine.buildCommandParams = function (runConfig) {
 	        Logger_1.Logger.debug('CodeEngine', 'runconfig: %o', runConfig);
 	        return {
-	            // game: otterside.game,
-	            // gameManager: otterside.gameManager,
-	            // gameStates: {
-	            //     PreloadState: PreloadState.stateName,
-	            //     BootState: BootState.stateName,
-	            //     MainMenuState: MainMenuState.stateName,
-	            //     PlayState: PlayState.stateName
-	            // },
 	            console: runConfig.console,
-	            arguments: runConfig.context.arguments || {}
+	            arguments: runConfig.context.arguments || []
 	        };
 	    };
 	    CodeEngine.transpile = function (runConfig) {
@@ -1213,7 +1202,7 @@
 	        undefinds += ';';
 	        return "\nreturn (function(){\n  " + undefinds + "\n\n  " + script + "\n})();\n";
 	    };
-	    CodeEngine.allowedGlobals = ['Math', 'NaN', 'Infinity', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'Date', 'console', 'Object'];
+	    CodeEngine.allowedGlobals = ['Math', 'NaN', 'Infinity', 'parseInt', 'parseFloat', 'isNaN', 'isFinite', 'Date', 'console', 'Object', 'JSON'];
 	    CodeEngine.compilerOptions = {
 	        module: typescript_1.ModuleKind.CommonJS,
 	        noLib: true,
@@ -56344,11 +56333,11 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Cat_1 = __webpack_require__(31);
-	exports.Cat = Cat_1.Cat;
+	var Less_1 = __webpack_require__(31);
+	exports.Less = Less_1.Less;
 	var MarkdownReader_1 = __webpack_require__(32);
 	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
-	var Ls_1 = __webpack_require__(34);
+	var Ls_1 = __webpack_require__(35);
 	exports.Ls = Ls_1.Ls;
 
 
@@ -56358,22 +56347,23 @@
 
 	"use strict";
 	var MarkdownReader_1 = __webpack_require__(32);
+	var JsonReader_1 = __webpack_require__(34);
 	/**
 	 * Command to read a file.
 	 */
-	var Cat = (function () {
-	    function Cat(console) {
+	var Less = (function () {
+	    function Less(console) {
 	        this.console = console;
 	    }
-	    Cat.prototype.quit = function () {
+	    Less.prototype.quit = function () {
 	        this.console.closeCurrentContext();
 	    };
-	    Cat.prototype.executeCommand = function (context) {
+	    Less.prototype.executeCommand = function (context) {
 	        if (!context.arguments) {
 	            this.console.printLine('a filename argument is required. use **read filename** to read a file.');
 	            return;
 	        }
-	        var fileName = context.arguments['file'];
+	        var fileName = context.arguments[0];
 	        var file = this.console.getFile(fileName);
 	        if (!file) {
 	            this.console.printLine("File **" + fileName + "** not found.");
@@ -56381,6 +56371,9 @@
 	        }
 	        if (file.ext === '.md') {
 	            this.reader = new MarkdownReader_1.MarkdownReader(file, this.console);
+	        }
+	        else if (file.ext === '.json') {
+	            this.reader = new JsonReader_1.JsonReader(file, this.console);
 	        }
 	        else {
 	            throw "File ending " + file.ext + " not supported yet";
@@ -56391,8 +56384,8 @@
 	        this.registerCommands(consoleContext);
 	        this.reader.performRead();
 	    };
-	    Cat.prototype.autocomplete = function (argumentName) {
-	        if (argumentName === 'file') {
+	    Less.prototype.autocomplete = function (args) {
+	        if (args.length <= 1) {
 	            var files = this.console.getFiles();
 	            if (!files) {
 	                return [];
@@ -56403,15 +56396,15 @@
 	        }
 	        return [];
 	    };
-	    Cat.prototype.registerCommands = function (consoleContext) {
+	    Less.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
 	        consoleContext.registerCommand({
 	            command: 'quit',
 	            helpText: 'Close the current file.'
 	        }, function (context) { return _this.quit(); });
 	    };
-	    Cat.command = {
-	        command: 'cat',
+	    Less.command = {
+	        command: 'less',
 	        helpText: 'Shows the content of a file.',
 	        arguments: [{
 	                name: 'file',
@@ -56419,9 +56412,9 @@
 	                helpText: 'The name of the file to show.'
 	            }]
 	    };
-	    return Cat;
+	    return Less;
 	}());
-	exports.Cat = Cat;
+	exports.Less = Less;
 
 
 /***/ },
@@ -56470,6 +56463,31 @@
 
 /***/ },
 /* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var __extends = (this && this.__extends) || function (d, b) {
+	    for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p];
+	    function __() { this.constructor = d; }
+	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
+	};
+	var ReaderBase_1 = __webpack_require__(33);
+	var JsonReader = (function (_super) {
+	    __extends(JsonReader, _super);
+	    function JsonReader() {
+	        _super.apply(this, arguments);
+	    }
+	    JsonReader.prototype.performRead = function () {
+	        this.console.printLine("```javascript\n" + this.getContent() + "\n```");
+	        this.console.scrollTop();
+	    };
+	    return JsonReader;
+	}(ReaderBase_1.ReaderBase));
+	exports.JsonReader = JsonReader;
+
+
+/***/ },
+/* 35 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56506,7 +56524,7 @@
 	    };
 	    Ls.prototype.filterFiles = function (files, commandArgs) {
 	        //Also show hidden files if the users wants it
-	        if (commandArgs && commandArgs['all'] === 'all') {
+	        if (commandArgs && commandArgs[0] === 'all') {
 	            return files;
 	        }
 	        //Only show hidden files when the all option is specified
@@ -56526,6 +56544,27 @@
 	    return Ls;
 	}());
 	exports.Ls = Ls;
+
+
+/***/ },
+/* 36 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var Disconnect = (function () {
+	    function Disconnect(console) {
+	        this.console = console;
+	    }
+	    Disconnect.prototype.executeCommand = function (context) {
+	        this.console.fire('server.disconnected');
+	    };
+	    Disconnect.command = {
+	        command: 'disconnect',
+	        helpText: 'Close the connection to the current server'
+	    };
+	    return Disconnect;
+	}());
+	exports.Disconnect = Disconnect;
 
 
 /***/ }
