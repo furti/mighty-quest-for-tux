@@ -21,4 +21,6 @@ To start enter **connect** into the textfield below and hit enter.
 A list of servers you can connect to will be shown.
 You have to choose one by entering the servers name in the textfield.
 
+Use the **disconnect** command to close the server connection.
+
 So have fun and do a great job :)

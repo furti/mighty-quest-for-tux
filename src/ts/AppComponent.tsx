@@ -2,12 +2,21 @@ import * as React from 'react';
 
 import { Component } from 'react';
 import { Console } from './console/Console';
+import { Disconnect } from './DisconnectCommand';
 
 let console = new Console('dist/content');
 
+
 console.on('server.connect', (folder: string) => {
     console.close();
-    console.start(folder);
+    console.start(folder).then(() => {
+        console.getCurrentContext().registerCommand(Disconnect.command, new Disconnect(console));
+    });
+});
+
+console.on('server.disconnected', () => {
+    console.close();
+    console.start('intro');
 });
 
 console.on('level.complete', (levelName: string) => {
