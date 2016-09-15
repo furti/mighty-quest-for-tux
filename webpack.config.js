@@ -35,7 +35,8 @@ module.exports = {
         "marked": "marked",
         "classnames": 'classNames',
         "q": "Q",
-        "@types/base64-js": "base64js"
+        "@types/base64-js": "base64js",
+        "codemirror": "CodeMirror"
     },
 
     plugins: [
@@ -47,7 +48,10 @@ module.exports = {
             { from: './node_modules/text-encoder-lite/index.js', to: './dist/text-encoder-lite.js' },
             { from: './node_modules/base64-js/base64js.min.js', to: './dist/base64js.min.js' },
             { from: './node_modules/fast-levenshtein/levenshtein.js', to: './dist/levenshtein.js' },
-            { from: './node_modules/q/q.js', to: './dist/q.js' }
+            { from: './node_modules/q/q.js', to: './dist/q.js' },
+            { from: './node_modules/codemirror/lib/codemirror.js', to: './dist/codemirror.js' },
+            { from: './node_modules/codemirror/lib/codemirror.css', to: './dist/codemirror.css' },
+            { from: './node_modules/codemirror/mode/javascript/javascript.js', to: './dist/js-mode.js' }
         ], { copyUnmodified: true })
     ]
 };

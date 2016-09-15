@@ -67,7 +67,8 @@ export class Console {
 
         all<any>([this.contentLoaded, this.consoleConnected.promise]).finally(() => {
             this.startContext({
-                showInput: true
+                showInput: true,
+                editable: false
             });
 
             this.registerDefaultCommands();
@@ -245,8 +246,10 @@ export class Console {
         var currentContext = this.getCurrentContext();
 
         var less = new commands.Less(this);
+        var vi = new commands.Vi(this);
         currentContext.registerCommand(commands.Less.command, less, less);
         currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
+        currentContext.registerCommand(commands.Vi.command, vi, vi);
     }
 
     /**

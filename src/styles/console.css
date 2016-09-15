@@ -26,7 +26,7 @@
     color: #6C71C4;
 }
 
-.console-lines {
+.console-lines, .console-editor {
   flex-grow: 1;
   padding: 0 3px;
   overflow: auto;

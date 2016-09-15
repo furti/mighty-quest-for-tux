@@ -1,5 +1,6 @@
 import * as React from 'react';
 import {Component} from 'react';
+import * as CodeMirror from 'codemirror';
 
 import {ConsoleViewProps} from './ConsoleViewProps';
 import {ConsoleViewState} from './ConsoleViewState';
@@ -18,6 +19,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     private textarea: ResizeableTextarea;
     private autocomplete: AutocompleteView;
     private linesContainer: HTMLDivElement;
+    private codeMirror: CodeMirror.EditorFromTextArea;
 
     constructor() {
         super();
@@ -31,7 +33,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
      * Set The focus to the command input
      */
     public focusInput(): void {
-        if (this.textarea) {
+        if (this.textarea && !this.state.context.config.editable) {
             this.textarea.focus();
         }
     }
@@ -129,18 +131,46 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
         }
     }
 
+    private connectEditor(textarea: HTMLTextAreaElement): void {
+        if (textarea) {
+            let config = this.state.context.config;
+
+            this.codeMirror = CodeMirror.fromTextArea(textarea, {
+                lineNumbers: true,
+                autofocus: true,
+                mode: config.editorMode,
+                indentUnit: 4
+            });
+
+            if(config.initialContent) {
+                this.codeMirror.setValue(config.initialContent);
+            }
+        }
+    }
+
     render() {
         var lines = this.state.context && this.state.context.lines ? this.state.context.lines : [];
 
         return <div className="console" onClick={(e) => this.focusInput() } >
-            <div className="console-lines" ref={(linesContainer) => this.connectLinesContainer(linesContainer) }>
-                {
+            {
+                (() => {
+                    if (this.state.context && this.state.context.config.editable) {
+                        return <div className="console-editor">
+                            <textarea ref={(textarea: HTMLTextAreaElement) => this.connectEditor(textarea) }></textarea>
+                        </div>
+                    }
+                    else {
+                        return <div className="console-lines" ref={(linesContainer) => this.connectLinesContainer(linesContainer) }>
+                            {
 
-                    lines.map((line, index) => {
-                        return <MarkdownParagraph key={this.state.context.id + "-line-" + index} markdownContent={line} className="console-line"></MarkdownParagraph>
-                    })
-                }
-            </div>
+                                lines.map((line, index) => {
+                                    return <MarkdownParagraph key={this.state.context.id + "-line-" + index} markdownContent={line} className="console-line"></MarkdownParagraph>
+                                })
+                            }
+                        </div>
+                    }
+                })()
+            }
             {
                 (() => {
                     if (this.state.context && this.state.context.config.showInput) {
