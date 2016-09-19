@@ -139,10 +139,11 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
                 lineNumbers: true,
                 autofocus: true,
                 mode: config.editorMode,
-                indentUnit: 4
+                indentUnit: 4,
+                viewportMargin: Infinity
             });
 
-            if(config.initialContent) {
+            if (config.initialContent) {
                 this.codeMirror.setValue(config.initialContent);
             }
         }

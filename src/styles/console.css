@@ -22,15 +22,33 @@
   font-family: Consolas;
 }
 
+.console .CodeMirror {
+  flex: 1 1 auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.console .CodeMirror-scroll {
+  flex: 1 1 auto;
+}
+
 .console h1, h2, h3, h4, h5, h6 {
     color: #6C71C4;
 }
 
-.console-lines, .console-editor {
+.console-lines {
   flex-grow: 1;
   padding: 0 3px;
   overflow: auto;
 }
+
+.console-editor {
+  display: flex;
+  flex-direction: column;
+  flex-grow: 1;
+  overflow: auto;
+}
+
 .console-line p:only-child {
   margin: 0;
 }
