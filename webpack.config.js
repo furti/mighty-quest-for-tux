@@ -51,6 +51,7 @@ module.exports = {
             { from: './node_modules/q/q.js', to: './dist/q.js' },
             { from: './node_modules/codemirror/lib/codemirror.js', to: './dist/codemirror.js' },
             { from: './node_modules/codemirror/lib/codemirror.css', to: './dist/codemirror.css' },
+            { from: './node_modules/codemirror/theme/material.css', to: './dist/cm-material.css' },
             { from: './node_modules/codemirror/mode/javascript/javascript.js', to: './dist/js-mode.js' }
         ], { copyUnmodified: true })
     ]

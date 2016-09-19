@@ -140,7 +140,8 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
                 autofocus: true,
                 mode: config.editorMode,
                 indentUnit: 4,
-                viewportMargin: Infinity
+                viewportMargin: Infinity,
+                theme: 'material'
             });
 
             if (config.initialContent) {
