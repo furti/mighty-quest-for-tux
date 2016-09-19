@@ -12,5 +12,8 @@
             "file": "connect.ts",
             "runNamespace": "intro.connect"
         }
+    ],
+    "writeable": [
+        "test.json"
     ]
 }

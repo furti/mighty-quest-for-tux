@@ -60,7 +60,8 @@ export class Less {
         }
 
         var consoleContext = this.console.startContext({
-            showInput: true
+            showInput: true,
+            editable: false
         });
 
         this.registerCommands(consoleContext);

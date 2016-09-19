@@ -5,6 +5,7 @@
   "main": "index.html",
   "scripts": {
     "start": "concurrently \"npm run webpack-watch\" \"npm run parse-content-watch\" \"npm run parser-watch\" \"npm run lite\" ",
+    "build": "concurrently \"npm run webpack\" \"npm run parse-content\" \"npm run parser\" ",
     "lite": "lite-server",
     "typings": "typings install",
     "parse-content": "node parse-content.js",
