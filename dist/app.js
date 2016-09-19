@@ -75,7 +75,7 @@
 	};
 	var React = __webpack_require__(1);
 	var Console_1 = __webpack_require__(4);
-	var DisconnectCommand_1 = __webpack_require__(36);
+	var DisconnectCommand_1 = __webpack_require__(38);
 	var console = new Console_1.Console('dist/content');
 	console.on('server.connect', function (folder) {
 	    console.close();
@@ -113,12 +113,12 @@
 	var q_1 = __webpack_require__(5);
 	var ConsoleContext_1 = __webpack_require__(6);
 	var ConsoleView_1 = __webpack_require__(11);
-	var Events_1 = __webpack_require__(17);
-	var Base64_1 = __webpack_require__(18);
+	var Events_1 = __webpack_require__(18);
+	var Base64_1 = __webpack_require__(19);
 	var ConsoleEvent_1 = __webpack_require__(9);
-	var ConsoleExecutableHandler_1 = __webpack_require__(20);
-	var Http_1 = __webpack_require__(27);
-	var commands = __webpack_require__(30);
+	var ConsoleExecutableHandler_1 = __webpack_require__(21);
+	var Http_1 = __webpack_require__(28);
+	var commands = __webpack_require__(31);
 	/**
 	 * The Console that is used for interacting with the user.
 	 *
@@ -157,7 +157,8 @@
 	        this.show();
 	        q_1.all([this.contentLoaded, this.consoleConnected.promise]).finally(function () {
 	            _this.startContext({
-	                showInput: true
+	                showInput: true,
+	                editable: false
 	            });
 	            _this.registerDefaultCommands();
 	        }).then(function (resolvedData) {
@@ -302,8 +303,10 @@
 	    Console.prototype.registerDefaultCommands = function () {
 	        var currentContext = this.getCurrentContext();
 	        var less = new commands.Less(this);
+	        var vi = new commands.Vi(this);
 	        currentContext.registerCommand(commands.Less.command, less, less);
 	        currentContext.registerCommand(commands.Ls.command, new commands.Ls(this));
+	        currentContext.registerCommand(commands.Vi.command, vi, vi);
 	    };
 	    /**
 	     * Displays the console on the screen and sets up all event handlers.
@@ -688,9 +691,10 @@
 	};
 	var React = __webpack_require__(1);
 	var react_1 = __webpack_require__(1);
-	var AutocompleteView_1 = __webpack_require__(12);
-	var ResizeableTextarea_1 = __webpack_require__(14);
-	var MarkdownParagraph_1 = __webpack_require__(15);
+	var CodeMirror = __webpack_require__(12);
+	var AutocompleteView_1 = __webpack_require__(13);
+	var ResizeableTextarea_1 = __webpack_require__(15);
+	var MarkdownParagraph_1 = __webpack_require__(16);
 	/**
 	 * The visual representation of the
 	 */
@@ -706,7 +710,7 @@
 	     * Set The focus to the command input
 	     */
 	    ConsoleView.prototype.focusInput = function () {
-	        if (this.textarea) {
+	        if (this.textarea && !this.state.context.config.editable) {
 	            this.textarea.focus();
 	        }
 	    };
@@ -794,12 +798,35 @@
 	            this.linesContainer = linesContainer;
 	        }
 	    };
+	    ConsoleView.prototype.connectEditor = function (textarea) {
+	        if (textarea) {
+	            var config = this.state.context.config;
+	            this.codeMirror = CodeMirror.fromTextArea(textarea, {
+	                lineNumbers: true,
+	                autofocus: true,
+	                mode: config.editorMode,
+	                indentUnit: 4,
+	                viewportMargin: Infinity,
+	                theme: 'material'
+	            });
+	            if (config.initialContent) {
+	                this.codeMirror.setValue(config.initialContent);
+	            }
+	        }
+	    };
 	    ConsoleView.prototype.render = function () {
 	        var _this = this;
 	        var lines = this.state.context && this.state.context.lines ? this.state.context.lines : [];
-	        return React.createElement("div", {className: "console", onClick: function (e) { return _this.focusInput(); }}, React.createElement("div", {className: "console-lines", ref: function (linesContainer) { return _this.connectLinesContainer(linesContainer); }}, lines.map(function (line, index) {
-	            return React.createElement(MarkdownParagraph_1.MarkdownParagraph, {key: _this.state.context.id + "-line-" + index, markdownContent: line, className: "console-line"});
-	        })), (function () {
+	        return React.createElement("div", {className: "console", onClick: function (e) { return _this.focusInput(); }}, (function () {
+	            if (_this.state.context && _this.state.context.config.editable) {
+	                return React.createElement("div", {className: "console-editor"}, React.createElement("textarea", {ref: function (textarea) { return _this.connectEditor(textarea); }}));
+	            }
+	            else {
+	                return React.createElement("div", {className: "console-lines", ref: function (linesContainer) { return _this.connectLinesContainer(linesContainer); }}, lines.map(function (line, index) {
+	                    return React.createElement(MarkdownParagraph_1.MarkdownParagraph, {key: _this.state.context.id + "-line-" + index, markdownContent: line, className: "console-line"});
+	                }));
+	            }
+	        })(), (function () {
 	            if (_this.state.context && _this.state.context.config.showInput) {
 	                return React.createElement("div", {className: "console-input"}, React.createElement(AutocompleteView_1.AutocompleteView, {ref: function (autocomplete) { return _this.autocomplete = autocomplete; }}), React.createElement("div", {className: "input-container"}, React.createElement("span", {className: "prompt"}, "$"), React.createElement(ResizeableTextarea_1.ResizeableTextarea, {onKeyUp: function (event) { return _this.handleUp(event); }, onKeyDown: function (event) { return _this.handleDown(event); }, ref: function (textarea) { return _this.textarea = textarea; }})));
 	            }
@@ -812,6 +839,12 @@
 
 /***/ },
 /* 12 */
+/***/ function(module, exports) {
+
+	module.exports = CodeMirror;
+
+/***/ },
+/* 13 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -822,7 +855,7 @@
 	};
 	var React = __webpack_require__(1);
 	var react_1 = __webpack_require__(1);
-	var classNames = __webpack_require__(13);
+	var classNames = __webpack_require__(14);
 	var AutocompleteView = (function (_super) {
 	    __extends(AutocompleteView, _super);
 	    function AutocompleteView() {
@@ -918,13 +951,13 @@
 
 
 /***/ },
-/* 13 */
+/* 14 */
 /***/ function(module, exports) {
 
 	module.exports = classNames;
 
 /***/ },
-/* 14 */
+/* 15 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -969,7 +1002,7 @@
 
 
 /***/ },
-/* 15 */
+/* 16 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -980,7 +1013,7 @@
 	};
 	var React = __webpack_require__(1);
 	var react_1 = __webpack_require__(1);
-	var marked = __webpack_require__(16);
+	var marked = __webpack_require__(17);
 	var Logger_1 = __webpack_require__(10);
 	var markdownRenderer = new marked.Renderer();
 	markdownRenderer.paragraph = function (text) {
@@ -1011,13 +1044,13 @@
 
 
 /***/ },
-/* 16 */
+/* 17 */
 /***/ function(module, exports) {
 
 	module.exports = marked;
 
 /***/ },
-/* 17 */
+/* 18 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -1060,11 +1093,11 @@
 
 
 /***/ },
-/* 18 */
+/* 19 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var base64js = __webpack_require__(19);
+	var base64js = __webpack_require__(20);
 	var Base64 = (function () {
 	    function Base64() {
 	    }
@@ -1100,18 +1133,18 @@
 
 
 /***/ },
-/* 19 */
+/* 20 */
 /***/ function(module, exports) {
 
 	module.exports = base64js;
 
 /***/ },
-/* 20 */
+/* 21 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var CodeEngine_1 = __webpack_require__(21);
-	var Base64_1 = __webpack_require__(18);
+	var CodeEngine_1 = __webpack_require__(22);
+	var Base64_1 = __webpack_require__(19);
 	var ConsoleExecutableHandler = (function () {
 	    function ConsoleExecutableHandler(console, executable) {
 	        this.console = console;
@@ -1137,11 +1170,11 @@
 
 
 /***/ },
-/* 21 */
+/* 22 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var typescript_1 = __webpack_require__(22);
+	var typescript_1 = __webpack_require__(23);
 	var Logger_1 = __webpack_require__(10);
 	var CodeEngine = (function () {
 	    function CodeEngine() {
@@ -1214,7 +1247,7 @@
 
 
 /***/ },
-/* 22 */
+/* 23 */
 /***/ function(module, exports, __webpack_require__) {
 
 	/* WEBPACK VAR INJECTION */(function(process, __filename, global, __dirname) {/*! *****************************************************************************
@@ -3106,9 +3139,9 @@
 	            };
 	        }
 	        function getNodeSystem() {
-	            var _fs = __webpack_require__(24);
-	            var _path = __webpack_require__(25);
-	            var _os = __webpack_require__(26);
+	            var _fs = __webpack_require__(25);
+	            var _path = __webpack_require__(26);
+	            var _os = __webpack_require__(27);
 	            // average async stat takes about 30 microseconds
 	            // set chunk size to do 30 files in < 1 millisecond
 	            function createPollingWatchedFileSet(interval, chunkSize) {
@@ -56031,10 +56064,10 @@
 	var toolsVersion = "1.8";
 	/* tslint:enable:no-unused-variable */ 
 	
-	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(23), "/index.js", (function() { return this; }()), "/"))
+	/* WEBPACK VAR INJECTION */}.call(exports, __webpack_require__(24), "/index.js", (function() { return this; }()), "/"))
 
 /***/ },
-/* 23 */
+/* 24 */
 /***/ function(module, exports) {
 
 	// shim for using process in browser
@@ -56220,12 +56253,6 @@
 
 
 /***/ },
-/* 24 */
-/***/ function(module, exports) {
-
-	/* (ignored) */
-
-/***/ },
 /* 25 */
 /***/ function(module, exports) {
 
@@ -56239,10 +56266,16 @@
 
 /***/ },
 /* 27 */
+/***/ function(module, exports) {
+
+	/* (ignored) */
+
+/***/ },
+/* 28 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var HttpGetRequest_1 = __webpack_require__(28);
+	var HttpGetRequest_1 = __webpack_require__(29);
 	var Http = (function () {
 	    function Http() {
 	    }
@@ -56260,7 +56293,7 @@
 
 
 /***/ },
-/* 28 */
+/* 29 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56269,7 +56302,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var HttpRequestBase_1 = __webpack_require__(29);
+	var HttpRequestBase_1 = __webpack_require__(30);
 	var HttpGetRequest = (function (_super) {
 	    __extends(HttpGetRequest, _super);
 	    function HttpGetRequest(url) {
@@ -56285,7 +56318,7 @@
 
 
 /***/ },
-/* 29 */
+/* 30 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56329,25 +56362,27 @@
 
 
 /***/ },
-/* 30 */
-/***/ function(module, exports, __webpack_require__) {
-
-	"use strict";
-	var Less_1 = __webpack_require__(31);
-	exports.Less = Less_1.Less;
-	var MarkdownReader_1 = __webpack_require__(32);
-	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
-	var Ls_1 = __webpack_require__(35);
-	exports.Ls = Ls_1.Ls;
-
-
-/***/ },
 /* 31 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var MarkdownReader_1 = __webpack_require__(32);
-	var JsonReader_1 = __webpack_require__(34);
+	var Less_1 = __webpack_require__(32);
+	exports.Less = Less_1.Less;
+	var MarkdownReader_1 = __webpack_require__(33);
+	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
+	var Ls_1 = __webpack_require__(36);
+	exports.Ls = Ls_1.Ls;
+	var Vi_1 = __webpack_require__(37);
+	exports.Vi = Vi_1.Vi;
+
+
+/***/ },
+/* 32 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var MarkdownReader_1 = __webpack_require__(33);
+	var JsonReader_1 = __webpack_require__(35);
 	/**
 	 * Command to read a file.
 	 */
@@ -56379,7 +56414,8 @@
 	            throw "File ending " + file.ext + " not supported yet";
 	        }
 	        var consoleContext = this.console.startContext({
-	            showInput: true
+	            showInput: true,
+	            editable: false
 	        });
 	        this.registerCommands(consoleContext);
 	        this.reader.performRead();
@@ -56418,7 +56454,7 @@
 
 
 /***/ },
-/* 32 */
+/* 33 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56427,7 +56463,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(33);
+	var ReaderBase_1 = __webpack_require__(34);
 	var MarkdownReader = (function (_super) {
 	    __extends(MarkdownReader, _super);
 	    function MarkdownReader() {
@@ -56443,11 +56479,11 @@
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Base64_1 = __webpack_require__(18);
+	var Base64_1 = __webpack_require__(19);
 	var ReaderBase = (function () {
 	    function ReaderBase(file, console) {
 	        this.file = file;
@@ -56462,7 +56498,7 @@
 
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56471,7 +56507,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(33);
+	var ReaderBase_1 = __webpack_require__(34);
 	var JsonReader = (function (_super) {
 	    __extends(JsonReader, _super);
 	    function JsonReader() {
@@ -56487,7 +56523,7 @@
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56547,7 +56583,95 @@
 
 
 /***/ },
-/* 36 */
+/* 37 */
+/***/ function(module, exports) {
+
+	"use strict";
+	/**
+	 * Command to list all available files.
+	 */
+	var Vi = (function () {
+	    function Vi(console) {
+	        this.console = console;
+	    }
+	    Vi.prototype.executeCommand = function (context) {
+	        var fileName = context.arguments ? context.arguments[0] : null;
+	        if (!fileName) {
+	            this.console.printLine("Specify the file to open as an argument.");
+	            return;
+	        }
+	        var file = this.console.getFile(fileName);
+	        if (!file) {
+	            this.console.printLine("File " + fileName + " not found");
+	            return;
+	        }
+	        if (!file.readable && !file.writeable) {
+	            this.console.printLine("No permission to edit file " + fileName);
+	            return;
+	        }
+	        var consoleContext = this.console.startContext({
+	            showInput: true,
+	            editable: true,
+	            editorMode: this.modeFromFile(file),
+	            initialContent: this.console.getFileContent(fileName)
+	        });
+	        this.registerCommands(consoleContext);
+	    };
+	    Vi.prototype.autocomplete = function (args) {
+	        if (args.length <= 1) {
+	            var files = this.console.getFiles();
+	            if (!files) {
+	                return [];
+	            }
+	            return files.map(function (file) {
+	                return file.base;
+	            });
+	        }
+	        return [];
+	    };
+	    Vi.prototype.modeFromFile = function (file) {
+	        if (file.ext === '.js') {
+	            return 'javascript';
+	        }
+	        if (file.ext === '.json') {
+	            return {
+	                name: 'javascript',
+	                json: true
+	            };
+	        }
+	        if (file.ext === '.ts') {
+	            return {
+	                name: 'javascript',
+	                typescript: true
+	            };
+	        }
+	    };
+	    Vi.prototype.quit = function () {
+	        this.console.closeCurrentContext();
+	    };
+	    Vi.prototype.registerCommands = function (consoleContext) {
+	        var _this = this;
+	        consoleContext.registerCommand({
+	            command: 'quit',
+	            helpText: 'Close the current file.'
+	        }, function (context) { return _this.quit(); });
+	    };
+	    Vi.command = {
+	        command: 'vi',
+	        helpText: 'Open a file for editing.',
+	        arguments: [{
+	                name: 'file',
+	                required: true,
+	                helpText: 'The name of the file to edit.'
+	            }]
+	    };
+	    return Vi;
+	}());
+	exports.Vi = Vi;
+
+
+/***/ },
+/* 38 */
 /***/ function(module, exports) {
 
 	"use strict";
