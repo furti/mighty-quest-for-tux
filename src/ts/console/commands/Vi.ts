@@ -90,7 +90,7 @@ export class Vi {
 
     private registerCommands(consoleContext: ConsoleContext): void {
         consoleContext.registerCommand({
-            command: 'quit',
+            command: 'q',
             helpText: 'Close the current file.'
         }, (context) => this.quit());
     }
