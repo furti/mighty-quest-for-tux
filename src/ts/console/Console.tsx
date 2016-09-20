@@ -178,7 +178,11 @@ export class Console {
 
     public close(): void {
         this.events.fire(ConsoleEvent.CLOSE);
-        this.contexts.length = 0;
+
+        while (this.getCurrentContext()) {
+            this.closeCurrentContext();
+        }
+
         this.running = false;
     }
 
@@ -197,7 +201,7 @@ export class Console {
      */
     public closeCurrentContext(): void {
         if (this.contexts.length > 1) {
-            this.contexts.pop();
+            this.contexts.pop().destroy();
             this.setCurrentContext();
         }
     }

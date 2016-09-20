@@ -19,7 +19,6 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     private textarea: ResizeableTextarea;
     private autocomplete: AutocompleteView;
     private linesContainer: HTMLDivElement;
-    private codeMirror: CodeMirror.EditorFromTextArea;
 
     constructor() {
         super();
@@ -135,7 +134,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
         if (textarea) {
             let config = this.state.context.config;
 
-            this.codeMirror = CodeMirror.fromTextArea(textarea, {
+            this.state.context.registerCodeMirror(CodeMirror.fromTextArea(textarea, {
                 lineNumbers: true,
                 autofocus: true,
                 mode: config.editorMode,
@@ -143,11 +142,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
                 viewportMargin: Infinity,
                 theme: 'material',
                 lint: true
-            });
-
-            if (config.initialContent) {
-                this.codeMirror.setValue(config.initialContent);
-            }
+            }));
         }
     }
 
