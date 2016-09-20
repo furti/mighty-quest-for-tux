@@ -26,13 +26,15 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
         this.state = {
             context: null
         };
+
+        this.initConsoleView();
     }
 
     /**
      * Set The focus to the command input
      */
-    public focusInput(): void {
-        if (this.textarea && !this.state.context.config.editable) {
+    public focusInput(force?: boolean): void {
+        if (this.textarea && (!this.state.context.config.editable || force)) {
             this.textarea.focus();
         }
     }
@@ -57,6 +59,14 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
         }
 
         this.scrollTimeout = window.setTimeout(() => this.linesContainer.scrollTop = this.linesContainer.scrollHeight, 1);
+    }
+
+    private initConsoleView(): void {
+        document.addEventListener("keyup", (e: KeyboardEvent) => {
+            if (e.keyCode === Key.ESC) {
+                this.focusInput(true);
+            }
+        });
     }
 
     private handleUp(e: React.KeyboardEvent): void {
@@ -149,7 +159,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     render() {
         var lines = this.state.context && this.state.context.lines ? this.state.context.lines : [];
 
-        return <div className="console" onClick={(e) => this.focusInput() } >
+        return <div className="console" onClick={(e) => this.focusInput() }>
             {
                 (() => {
                     if (this.state.context && this.state.context.config.editable) {
