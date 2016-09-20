@@ -247,7 +247,9 @@
 	    };
 	    Console.prototype.close = function () {
 	        this.events.fire(ConsoleEvent_1.ConsoleEvent.CLOSE);
-	        this.contexts.length = 0;
+	        while (this.getCurrentContext()) {
+	            this.closeCurrentContext();
+	        }
 	        this.running = false;
 	    };
 	    Console.prototype.startContext = function (config) {
@@ -262,7 +264,7 @@
 	     */
 	    Console.prototype.closeCurrentContext = function () {
 	        if (this.contexts.length > 1) {
-	            this.contexts.pop();
+	            this.contexts.pop().destroy();
 	            this.setCurrentContext();
 	        }
 	    };
@@ -375,6 +377,17 @@
 	    };
 	    ConsoleContext.prototype.autocomplete = function (current) {
 	        return this.consoleEngine.autocomplete(current);
+	    };
+	    ConsoleContext.prototype.destroy = function () {
+	        if (this.codeMirror) {
+	            this.codeMirror.toTextArea();
+	        }
+	    };
+	    ConsoleContext.prototype.registerCodeMirror = function (codeMirror) {
+	        this.codeMirror = codeMirror;
+	        if (this.config.initialContent) {
+	            this.codeMirror.setValue(this.config.initialContent);
+	        }
 	    };
 	    return ConsoleContext;
 	}());
@@ -705,12 +718,13 @@
 	        this.state = {
 	            context: null
 	        };
+	        this.initConsoleView();
 	    }
 	    /**
 	     * Set The focus to the command input
 	     */
-	    ConsoleView.prototype.focusInput = function () {
-	        if (this.textarea && !this.state.context.config.editable) {
+	    ConsoleView.prototype.focusInput = function (force) {
+	        if (this.textarea && (!this.state.context.config.editable || force)) {
 	            this.textarea.focus();
 	        }
 	    };
@@ -732,6 +746,14 @@
 	            window.clearTimeout(this.scrollTimeout);
 	        }
 	        this.scrollTimeout = window.setTimeout(function () { return _this.linesContainer.scrollTop = _this.linesContainer.scrollHeight; }, 1);
+	    };
+	    ConsoleView.prototype.initConsoleView = function () {
+	        var _this = this;
+	        document.addEventListener("keyup", function (e) {
+	            if (e.keyCode === 27 /* ESC */) {
+	                _this.focusInput(true);
+	            }
+	        });
 	    };
 	    ConsoleView.prototype.handleUp = function (e) {
 	        var textarea = e.target;
@@ -801,17 +823,15 @@
 	    ConsoleView.prototype.connectEditor = function (textarea) {
 	        if (textarea) {
 	            var config = this.state.context.config;
-	            this.codeMirror = CodeMirror.fromTextArea(textarea, {
+	            this.state.context.registerCodeMirror(CodeMirror.fromTextArea(textarea, {
 	                lineNumbers: true,
 	                autofocus: true,
 	                mode: config.editorMode,
 	                indentUnit: 4,
 	                viewportMargin: Infinity,
-	                theme: 'material'
-	            });
-	            if (config.initialContent) {
-	                this.codeMirror.setValue(config.initialContent);
-	            }
+	                theme: 'material',
+	                lint: true
+	            }));
 	        }
 	    };
 	    ConsoleView.prototype.render = function () {
@@ -56435,7 +56455,7 @@
 	    Less.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
 	        consoleContext.registerCommand({
-	            command: 'quit',
+	            command: 'q',
 	            helpText: 'Close the current file.'
 	        }, function (context) { return _this.quit(); });
 	    };
@@ -56634,16 +56654,10 @@
 	            return 'javascript';
 	        }
 	        if (file.ext === '.json') {
-	            return {
-	                name: 'javascript',
-	                json: true
-	            };
+	            return 'application/json';
 	        }
 	        if (file.ext === '.ts') {
-	            return {
-	                name: 'javascript',
-	                typescript: true
-	            };
+	            return 'application/typescript';
 	        }
 	    };
 	    Vi.prototype.quit = function () {
@@ -56652,7 +56666,7 @@
 	    Vi.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
 	        consoleContext.registerCommand({
-	            command: 'quit',
+	            command: 'q',
 	            helpText: 'Close the current file.'
 	        }, function (context) { return _this.quit(); });
 	    };
