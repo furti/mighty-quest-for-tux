@@ -52,7 +52,13 @@ module.exports = {
             { from: './node_modules/codemirror/lib/codemirror.js', to: './dist/codemirror.js' },
             { from: './node_modules/codemirror/lib/codemirror.css', to: './dist/codemirror.css' },
             { from: './node_modules/codemirror/theme/material.css', to: './dist/cm-material.css' },
-            { from: './node_modules/codemirror/mode/javascript/javascript.js', to: './dist/js-mode.js' }
+            { from: './node_modules/codemirror/mode/javascript/javascript.js', to: './dist/js-mode.js' },
+
+
+            { from: './node_modules/codemirror/addon/lint/lint.js', to: './dist/cm-lint.js' },
+            { from: './node_modules/codemirror/addon/lint/lint.css', to: './dist/cm-lint.css' },
+            { from: './node_modules/codemirror/addon/lint/json-lint.js', to: './dist/cm-json-lint.js' },
+            { from: './node_modules/jsonlint/lib/jsonlint.js', to: './dist/json-lint.js' }
         ], { copyUnmodified: true })
     ]
 };

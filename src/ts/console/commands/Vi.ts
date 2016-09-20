@@ -76,17 +76,11 @@ export class Vi {
         }
 
         if (file.ext === '.json') {
-            return {
-                name: 'javascript',
-                json: true
-            }
+            return 'application/json';
         }
 
         if (file.ext === '.ts') {
-            return {
-                name: 'javascript',
-                typescript: true
-            }
+            return 'application/typescript';
         }
     }
 

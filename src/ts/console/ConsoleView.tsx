@@ -141,7 +141,8 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
                 mode: config.editorMode,
                 indentUnit: 4,
                 viewportMargin: Infinity,
-                theme: 'material'
+                theme: 'material',
+                lint: true
             });
 
             if (config.initialContent) {
