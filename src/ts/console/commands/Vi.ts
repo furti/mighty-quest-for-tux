@@ -76,17 +76,11 @@ export class Vi {
         }
 
         if (file.ext === '.json') {
-            return {
-                name: 'javascript',
-                json: true
-            }
+            return 'application/json';
         }
 
         if (file.ext === '.ts') {
-            return {
-                name: 'javascript',
-                typescript: true
-            }
+            return 'application/typescript';
         }
     }
 
@@ -96,7 +90,7 @@ export class Vi {
 
     private registerCommands(consoleContext: ConsoleContext): void {
         consoleContext.registerCommand({
-            command: 'quit',
+            command: 'q',
             helpText: 'Close the current file.'
         }, (context) => this.quit());
     }
