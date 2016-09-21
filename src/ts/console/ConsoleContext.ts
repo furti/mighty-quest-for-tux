@@ -71,6 +71,12 @@ export class ConsoleContext {
         if (this.config.initialContent) {
             this.codeMirror.setValue(this.config.initialContent);
         }
+
+        if (this.config.onFileChange) {
+            this.codeMirror.on('change', (editor: CodeMirror.Editor, change: CodeMirror.EditorChangeLinkedList) => {
+                this.config.onFileChange(change);
+            });
+        }
     }
 
     public isEditorRegistered(): boolean {
