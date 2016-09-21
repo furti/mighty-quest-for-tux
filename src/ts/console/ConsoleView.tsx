@@ -121,7 +121,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     }
 
     private printActualValue(actualValue: string) {
-        this.state.context.lines.push(`$ ${actualValue}`);
+        this.state.context.addLine(`$ ${actualValue}`);
         this.forceUpdate();
         this.focusInput();
     }
@@ -141,7 +141,7 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     }
 
     private connectEditor(textarea: HTMLTextAreaElement): void {
-        if (textarea) {
+        if (textarea && !this.state.context.isEditorRegistered()) {
             let config = this.state.context.config;
 
             this.state.context.registerCodeMirror(CodeMirror.fromTextArea(textarea, {
@@ -157,14 +157,19 @@ export class ConsoleView extends Component<ConsoleViewProps, ConsoleViewState> {
     }
 
     render() {
-        var lines = this.state.context && this.state.context.lines ? this.state.context.lines : [];
+        var lines = this.state.context && this.state.context.getLines() ? this.state.context.getLines() : [];
 
         return <div className="console" onClick={(e) => this.focusInput() }>
             {
                 (() => {
                     if (this.state.context && this.state.context.config.editable) {
                         return <div className="console-editor">
-                            <textarea ref={(textarea: HTMLTextAreaElement) => this.connectEditor(textarea) }></textarea>
+                            <div className="codemirror-container">
+                                <textarea ref={(textarea: HTMLTextAreaElement) => this.connectEditor(textarea) }></textarea>
+                            </div>
+                            <div className="editor-line">
+                                <MarkdownParagraph className="console-line" markdownContent={lines[0]}></MarkdownParagraph>
+                            </div>
                         </div>
                     }
                     else {

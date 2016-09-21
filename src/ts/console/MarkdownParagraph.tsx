@@ -19,6 +19,10 @@ export class MarkdownParagraph extends Component<MarkdownParagraphProps, {}>{
     private renderedContent: string;
 
     public renderContent(): string {
+        if (!this.props.markdownContent) {
+            return '';
+        }
+
         if (!this.renderedContent) {
             this.renderedContent = marked(this.props.markdownContent, {
                 gfm: true,
@@ -28,6 +32,20 @@ export class MarkdownParagraph extends Component<MarkdownParagraphProps, {}>{
         }
 
         return this.renderedContent;
+    }
+
+    protected shouldComponentUpdate(nextProps: MarkdownParagraphProps, nextState: {}, nextContext: any): boolean {
+        if (!nextProps || !this.props) {
+            return false;
+        }
+
+        let update = this.props.markdownContent !== nextProps.markdownContent;
+
+        if (update) {
+            this.renderedContent = null;
+        }
+
+        return update;
     }
 
     render(): JSX.Element {

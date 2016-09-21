@@ -152,7 +152,7 @@ export class Console {
      * @param {string} line the text to print to the console
      */
     public printLine(line: string): void {
-        this.getCurrentContext().lines.push(line);
+        this.getCurrentContext().addLine(line);
         this.rerenderView();
         this.consoleView.scrollBottom();
     }
