@@ -11,7 +11,7 @@ import * as CodeMirror from 'codemirror';
 import { Logger } from './Logger';
 
 export class ConsoleContext {
-    public lines: string[];
+    private lines: string[];
     public id: number;
     public config: ConsoleContextConfig;
     private consoleEngine: ConsoleEngine;
@@ -42,6 +42,19 @@ export class ConsoleContext {
         }
     }
 
+    public getLines(): string[] {
+        return this.lines;
+    }
+
+    public addLine(line: string): void {
+        // Only one line in editable mode for showing a error message or something
+        if (this.config.editable) {
+            this.lines.length = 0;
+        }
+
+        this.lines.push(line);
+    }
+
     public autocomplete(current: string): string[] {
         return this.consoleEngine.autocomplete(current);
     }
@@ -58,5 +71,19 @@ export class ConsoleContext {
         if (this.config.initialContent) {
             this.codeMirror.setValue(this.config.initialContent);
         }
+
+        if (this.config.onFileChange) {
+            this.codeMirror.on('change', (editor: CodeMirror.Editor, change: CodeMirror.EditorChangeLinkedList) => {
+                this.config.onFileChange(change);
+            });
+        }
+    }
+
+    public isEditorRegistered(): boolean {
+        if (!this.codeMirror) {
+            return false;
+        }
+
+        return true;
     }
 }

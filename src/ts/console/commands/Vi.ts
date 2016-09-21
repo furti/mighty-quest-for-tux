@@ -19,6 +19,7 @@ export class Vi {
     };
 
     private console: Console;
+    private fileChanged: boolean;
 
     constructor(console: Console) {
         this.console = console;
@@ -48,8 +49,11 @@ export class Vi {
             showInput: true,
             editable: true,
             editorMode: this.modeFromFile(file),
-            initialContent: this.console.getFileContent(fileName)
+            initialContent: this.console.getFileContent(fileName),
+            onFileChange: () => this.fileChanged = true
         });
+
+        this.fileChanged = false;
 
         this.registerCommands(consoleContext);
     }
@@ -84,15 +88,23 @@ export class Vi {
         }
     }
 
-    private quit(): void {
-        this.console.closeCurrentContext();
+    private quit(commandExecutionContext: CommandExecutionContext): void {
+        let consoleContext = this.console.getCurrentContext();
+        let force = commandExecutionContext.arguments && commandExecutionContext.arguments[0] === '!';
+
+        if (!this.fileChanged || force) {
+            this.console.closeCurrentContext();
+        }
+        else {
+            this.console.printLine('There are unsaved changes. Save the changes or type **q !** to discard them.');
+        }
     }
 
     private registerCommands(consoleContext: ConsoleContext): void {
         consoleContext.registerCommand({
             command: 'q',
             helpText: 'Close the current file.'
-        }, (context) => this.quit());
+        }, (context) => this.quit(context));
     }
 
 }
