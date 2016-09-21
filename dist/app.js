@@ -226,7 +226,7 @@
 	     * @param {string} line the text to print to the console
 	     */
 	    Console.prototype.printLine = function (line) {
-	        this.getCurrentContext().lines.push(line);
+	        this.getCurrentContext().addLine(line);
 	        this.rerenderView();
 	        this.consoleView.scrollBottom();
 	    };
@@ -375,6 +375,16 @@
 	            this.console.fire(ConsoleEvent_1.ConsoleEvent.COMMAND_EXECUTED, result.command);
 	        }
 	    };
+	    ConsoleContext.prototype.getLines = function () {
+	        return this.lines;
+	    };
+	    ConsoleContext.prototype.addLine = function (line) {
+	        // Only one line in editable mode for showing a error message or something
+	        if (this.config.editable) {
+	            this.lines.length = 0;
+	        }
+	        this.lines.push(line);
+	    };
 	    ConsoleContext.prototype.autocomplete = function (current) {
 	        return this.consoleEngine.autocomplete(current);
 	    };
@@ -384,10 +394,22 @@
 	        }
 	    };
 	    ConsoleContext.prototype.registerCodeMirror = function (codeMirror) {
+	        var _this = this;
 	        this.codeMirror = codeMirror;
 	        if (this.config.initialContent) {
 	            this.codeMirror.setValue(this.config.initialContent);
 	        }
+	        if (this.config.onFileChange) {
+	            this.codeMirror.on('change', function (editor, change) {
+	                _this.config.onFileChange(change);
+	            });
+	        }
+	    };
+	    ConsoleContext.prototype.isEditorRegistered = function () {
+	        if (!this.codeMirror) {
+	            return false;
+	        }
+	        return true;
 	    };
 	    return ConsoleContext;
 	}());
@@ -804,7 +826,7 @@
 	        }
 	    };
 	    ConsoleView.prototype.printActualValue = function (actualValue) {
-	        this.state.context.lines.push("$ " + actualValue);
+	        this.state.context.addLine("$ " + actualValue);
 	        this.forceUpdate();
 	        this.focusInput();
 	    };
@@ -821,7 +843,7 @@
 	        }
 	    };
 	    ConsoleView.prototype.connectEditor = function (textarea) {
-	        if (textarea) {
+	        if (textarea && !this.state.context.isEditorRegistered()) {
 	            var config = this.state.context.config;
 	            this.state.context.registerCodeMirror(CodeMirror.fromTextArea(textarea, {
 	                lineNumbers: true,
@@ -836,10 +858,10 @@
 	    };
 	    ConsoleView.prototype.render = function () {
 	        var _this = this;
-	        var lines = this.state.context && this.state.context.lines ? this.state.context.lines : [];
+	        var lines = this.state.context && this.state.context.getLines() ? this.state.context.getLines() : [];
 	        return React.createElement("div", {className: "console", onClick: function (e) { return _this.focusInput(); }}, (function () {
 	            if (_this.state.context && _this.state.context.config.editable) {
-	                return React.createElement("div", {className: "console-editor"}, React.createElement("textarea", {ref: function (textarea) { return _this.connectEditor(textarea); }}));
+	                return React.createElement("div", {className: "console-editor"}, React.createElement("div", {className: "codemirror-container"}, React.createElement("textarea", {ref: function (textarea) { return _this.connectEditor(textarea); }})), React.createElement("div", {className: "editor-line"}, React.createElement(MarkdownParagraph_1.MarkdownParagraph, {className: "console-line", markdownContent: lines[0]})));
 	            }
 	            else {
 	                return React.createElement("div", {className: "console-lines", ref: function (linesContainer) { return _this.connectLinesContainer(linesContainer); }}, lines.map(function (line, index) {
@@ -1046,6 +1068,9 @@
 	        _super.apply(this, arguments);
 	    }
 	    MarkdownParagraph.prototype.renderContent = function () {
+	        if (!this.props.markdownContent) {
+	            return '';
+	        }
 	        if (!this.renderedContent) {
 	            this.renderedContent = marked(this.props.markdownContent, {
 	                gfm: true,
@@ -1054,6 +1079,16 @@
 	            });
 	        }
 	        return this.renderedContent;
+	    };
+	    MarkdownParagraph.prototype.shouldComponentUpdate = function (nextProps, nextState, nextContext) {
+	        if (!nextProps || !this.props) {
+	            return false;
+	        }
+	        var update = this.props.markdownContent !== nextProps.markdownContent;
+	        if (update) {
+	            this.renderedContent = null;
+	        }
+	        return update;
 	    };
 	    MarkdownParagraph.prototype.render = function () {
 	        return React.createElement("div", {className: this.props.className, dangerouslySetInnerHTML: { __html: this.renderContent() }});
@@ -56615,6 +56650,7 @@
 	        this.console = console;
 	    }
 	    Vi.prototype.executeCommand = function (context) {
+	        var _this = this;
 	        var fileName = context.arguments ? context.arguments[0] : null;
 	        if (!fileName) {
 	            this.console.printLine("Specify the file to open as an argument.");
@@ -56633,8 +56669,10 @@
 	            showInput: true,
 	            editable: true,
 	            editorMode: this.modeFromFile(file),
-	            initialContent: this.console.getFileContent(fileName)
+	            initialContent: this.console.getFileContent(fileName),
+	            onFileChange: function () { return _this.fileChanged = true; }
 	        });
+	        this.fileChanged = false;
 	        this.registerCommands(consoleContext);
 	    };
 	    Vi.prototype.autocomplete = function (args) {
@@ -56660,15 +56698,22 @@
 	            return 'application/typescript';
 	        }
 	    };
-	    Vi.prototype.quit = function () {
-	        this.console.closeCurrentContext();
+	    Vi.prototype.quit = function (commandExecutionContext) {
+	        var consoleContext = this.console.getCurrentContext();
+	        var force = commandExecutionContext.arguments && commandExecutionContext.arguments[0] === '!';
+	        if (!this.fileChanged || force) {
+	            this.console.closeCurrentContext();
+	        }
+	        else {
+	            this.console.printLine('There are unsaved changes. Save the changes or type **q !** to discard them.');
+	        }
 	    };
 	    Vi.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
 	        consoleContext.registerCommand({
 	            command: 'q',
 	            helpText: 'Close the current file.'
-	        }, function (context) { return _this.quit(); });
+	        }, function (context) { return _this.quit(context); });
 	    };
 	    Vi.command = {
 	        command: 'vi',
