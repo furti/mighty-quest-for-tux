@@ -20,7 +20,7 @@ export class ConsoleExecutableHandler {
             return;
         }
 
-        var scriptContent = Base64.decode(file.content);
+        var scriptContent = file.content;
 
         CodeEngine.run({
             scripts: [scriptContent],

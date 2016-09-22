@@ -12,6 +12,9 @@ import {ConsoleEvent} from './ConsoleEvent'
 import {ConsoleExecutableHandler} from './ConsoleExecutableHandler'
 import {ConsoleContextConfig} from './ConsoleContextConfig'
 import {Http} from './http/Http'
+import {FileSystem} from './FileSystem'
+import {LocalStorageFileSystem} from './LocalStorageFileSystem'
+import {ConsoleContent} from './ConsoleContent'
 
 import * as commands from './commands/AllCommands'
 
@@ -28,19 +31,21 @@ export class Console {
     private consoleConnected: Deferred<void>;
     private consoleDeferred: Deferred<Console>;
     private running: boolean;
-    private content: ConsoleContent;
     private contexts: ConsoleContext[];
     private events: Events;
+    private fileSystem: FileSystem;
+    private welcomeText: string;
 
     /**
      * Constructs a new console with the given name.
      * @param  {string} consoleName The name of the console is used to load the content for the console from the server. The URL constructed is /console/<consoleName>.
      * @return {Console}            The Console.
      */
-    constructor(basePath: string) {
+    constructor(basePath: string, fileSystem?: FileSystem) {
         this.basePath = basePath;
         this.contexts = [];
         this.events = new Events();
+        this.fileSystem = fileSystem || new LocalStorageFileSystem();
     }
 
     /**
@@ -73,8 +78,10 @@ export class Console {
 
             this.registerDefaultCommands();
         }).then((resolvedData: any[]) => {
-            this.content = resolvedData[0];
-            this.registerExecutables();
+            let context: ConsoleContent = resolvedData[0];
+            this.welcomeText = context.welcome;
+            this.fileSystem.init(context.files);
+            this.registerExecutables(context.executables);
             this.printWelcome();
             this.consoleDeferred.resolve(this);
         }, (errorMessage: string) => {
@@ -120,13 +127,11 @@ export class Console {
     }
 
     public getFile(fileName: string): ConsoleFile {
-        return this.content.files[fileName];
+        return this.fileSystem.getFile(fileName);
     }
 
-    public getFileContent(fileName: string): any {
-        var file = this.getFile(fileName);
-
-        return file && file.content ? Base64.decode(file.content) : null;
+    public saveFile(fileName: string, content: any): void {
+        this.fileSystem.saveFile(fileName, content);
     }
 
     /**
@@ -134,17 +139,7 @@ export class Console {
      * @return {ConsoleFile[]} List of files
      */
     public getFiles(): ConsoleFile[] {
-        if (!this.content.files) {
-            return [];
-        }
-
-        var files: ConsoleFile[] = [];
-
-        for (let fileName of Object.getOwnPropertyNames(this.content.files)) {
-            files.push(this.content.files[fileName]);
-        }
-
-        return files;
+        return this.fileSystem.listFiles();
     }
 
     /**
@@ -161,7 +156,7 @@ export class Console {
         var file = this.getFile(fileName);
 
         if (file) {
-            this.printLine(Base64.decode(file.content));
+            this.printLine(file.content);
         }
         else {
             this.printLine(`File ${fileName} not found!`);
@@ -226,8 +221,8 @@ export class Console {
      * Prints the welcome text if available.
      */
     private printWelcome(): void {
-        if (this.content.welcome) {
-            this.printLine(Base64.decode(this.content.welcome));
+        if (this.welcomeText) {
+            this.printLine(Base64.decode(this.welcomeText));
         }
     }
 
@@ -235,13 +230,12 @@ export class Console {
      * Iterate over all executables and register them on the ConsoleEngine;
      * @return {[type]} [description]
      */
-    private registerExecutables(): void {
-        if (this.content.executables) {
+    private registerExecutables(executables: Executable[]): void {
+        if (executables) {
             var currentContext = this.getCurrentContext();
 
-            for (let executable of this.content.executables) {
-                currentContext.registerCommand(executable,
-                    new ConsoleExecutableHandler(this, executable));
+            for (let executable of executables) {
+                currentContext.registerCommand(executable, new ConsoleExecutableHandler(this, executable));
             }
         }
     }
@@ -283,27 +277,4 @@ export class Console {
         } }>
         </ConsoleView >;
     }
-}
-
-/**
- * Contains all the files and folders for a console instance.
- */
-interface ConsoleContent {
-    /**
-     * Markdown String that should be shown on startup.
-     */
-    welcome?: string;
-
-    /**
-     * List of Executable scripts for the console.
-     *
-     * @type {Executable}
-     */
-    executables: Executable[];
-
-    /**
-     * All files contained in the console;
-     * @type {ConsoleFile}
-     */
-    files: { [fileName: string]: ConsoleFile };
 }

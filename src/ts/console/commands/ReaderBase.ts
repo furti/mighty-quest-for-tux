@@ -1,6 +1,5 @@
 import { Console } from '../Console';
 import { ConsoleFile } from '../ConsoleFile';
-import { Base64 } from '../Base64';
 import { Reader } from './Reader';
 
 export abstract class ReaderBase implements Reader {
@@ -13,7 +12,7 @@ export abstract class ReaderBase implements Reader {
     }
 
     public getContent(): string {
-        return Base64.decode(this.file.content);
+        return this.file.content;
     }
 
     public abstract performRead(): void;

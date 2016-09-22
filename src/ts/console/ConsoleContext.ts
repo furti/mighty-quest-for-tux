@@ -79,6 +79,14 @@ export class ConsoleContext {
         }
     }
 
+    public getEditorContent(): string {
+        if (!this.codeMirror) {
+            return;
+        }
+
+        return this.codeMirror.getValue();
+    }
+
     public isEditorRegistered(): boolean {
         if (!this.codeMirror) {
             return false;
