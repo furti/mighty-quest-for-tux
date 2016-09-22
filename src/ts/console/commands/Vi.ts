@@ -20,6 +20,7 @@ export class Vi {
 
     private console: Console;
     private fileChanged: boolean;
+    private fileName: string;
 
     constructor(console: Console) {
         this.console = console;
@@ -54,6 +55,7 @@ export class Vi {
         });
 
         this.fileChanged = false;
+        this.fileName = fileName;
 
         this.registerCommands(consoleContext);
     }
@@ -93,6 +95,8 @@ export class Vi {
         let force = commandExecutionContext.arguments && commandExecutionContext.arguments[0] === '!';
 
         if (!this.fileChanged || force) {
+            this.fileName = null;
+            this.fileChanged = false;
             this.console.closeCurrentContext();
         }
         else {
@@ -100,11 +104,34 @@ export class Vi {
         }
     }
 
+    private write(commandExecutionContext: CommandExecutionContext): void {
+        if (!this.fileChanged) {
+            return;
+        }
+
+        this.console.saveFile(this.fileName, this.console.getCurrentContext().getEditorContent());
+        this.fileChanged = false;
+        this.console.printLine(`${this.fileName} persisted`);
+    }
+
     private registerCommands(consoleContext: ConsoleContext): void {
         consoleContext.registerCommand({
             command: 'q',
             helpText: 'Close the current file.'
         }, (context) => this.quit(context));
+
+        consoleContext.registerCommand({
+            command: 'w',
+            helpText: 'Write the changes to the disk.'
+        }, (context) => this.write(context));
+
+        consoleContext.registerCommand({
+            command: 'wq',
+            helpText: 'Write the changes to the disk and quit the editor.'
+        }, (context) => {
+            this.write(context);
+            this.quit(context);
+        });
     }
 
 }

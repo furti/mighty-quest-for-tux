@@ -2,7 +2,7 @@ import { Base64 } from './Base64';
 import { FileSystem } from './FileSystem';
 import { ConsoleFile } from './ConsoleFile';
 
-export abstract class FileSystemBase implements FileSystem {
+export class LocalStorageFileSystem implements FileSystem {
     private files: { [fileName: string]: ConsoleFile };
 
     public init(files: { [fileName: string]: ConsoleFile }): void {
@@ -47,6 +47,15 @@ export abstract class FileSystemBase implements FileSystem {
         return copy;
     }
 
+    public saveFile(fileName: string, content: any): void {
+        if (!content) {
+            localStorage.removeItem(`console-file-content:${fileName}`);
+        }
+        else {
+            localStorage.setItem(`console-file-content:${fileName}`, Base64.encode(content));
+        }
+    }
+
     /**
      * The actual implementation can check for an up to date file content if available.
      * When this method returns null or undefined the default content is used. 
@@ -58,5 +67,7 @@ export abstract class FileSystemBase implements FileSystem {
      * 
      * @memberOf FileSystemBase
      */
-    protected abstract findUpdatedContent(fileName: string): string;
+    protected findUpdatedContent(fileName: string): string {
+        return localStorage.getItem(`console-file-content:${fileName}`);
+    }
 }

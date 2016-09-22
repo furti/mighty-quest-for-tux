@@ -13,7 +13,7 @@ import {ConsoleExecutableHandler} from './ConsoleExecutableHandler'
 import {ConsoleContextConfig} from './ConsoleContextConfig'
 import {Http} from './http/Http'
 import {FileSystem} from './FileSystem'
-import {DefaultFileSystem} from './DefaultFileSystem'
+import {LocalStorageFileSystem} from './LocalStorageFileSystem'
 import {ConsoleContent} from './ConsoleContent'
 
 import * as commands from './commands/AllCommands'
@@ -45,7 +45,7 @@ export class Console {
         this.basePath = basePath;
         this.contexts = [];
         this.events = new Events();
-        this.fileSystem = fileSystem || new DefaultFileSystem();
+        this.fileSystem = fileSystem || new LocalStorageFileSystem();
     }
 
     /**
@@ -128,6 +128,10 @@ export class Console {
 
     public getFile(fileName: string): ConsoleFile {
         return this.fileSystem.getFile(fileName);
+    }
+
+    public saveFile(fileName: string, content: any): void {
+        this.fileSystem.saveFile(fileName, content);
     }
 
     /**
