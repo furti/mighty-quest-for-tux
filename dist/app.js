@@ -75,7 +75,7 @@
 	};
 	var React = __webpack_require__(1);
 	var Console_1 = __webpack_require__(4);
-	var DisconnectCommand_1 = __webpack_require__(38);
+	var DisconnectCommand_1 = __webpack_require__(39);
 	var console = new Console_1.Console('dist/content');
 	console.on('server.connect', function (folder) {
 	    console.close();
@@ -118,7 +118,8 @@
 	var ConsoleEvent_1 = __webpack_require__(9);
 	var ConsoleExecutableHandler_1 = __webpack_require__(21);
 	var Http_1 = __webpack_require__(28);
-	var commands = __webpack_require__(31);
+	var LocalStorageFileSystem_1 = __webpack_require__(31);
+	var commands = __webpack_require__(32);
 	/**
 	 * The Console that is used for interacting with the user.
 	 *
@@ -130,10 +131,11 @@
 	     * @param  {string} consoleName The name of the console is used to load the content for the console from the server. The URL constructed is /console/<consoleName>.
 	     * @return {Console}            The Console.
 	     */
-	    function Console(basePath) {
+	    function Console(basePath, fileSystem) {
 	        this.basePath = basePath;
 	        this.contexts = [];
 	        this.events = new Events_1.Events();
+	        this.fileSystem = fileSystem || new LocalStorageFileSystem_1.LocalStorageFileSystem();
 	    }
 	    /**
 	     * This method displays the console. This method can safely be called at any time.
@@ -162,8 +164,10 @@
 	            });
 	            _this.registerDefaultCommands();
 	        }).then(function (resolvedData) {
-	            _this.content = resolvedData[0];
-	            _this.registerExecutables();
+	            var context = resolvedData[0];
+	            _this.welcomeText = context.welcome;
+	            _this.fileSystem.init(context.files);
+	            _this.registerExecutables(context.executables);
 	            _this.printWelcome();
 	            _this.consoleDeferred.resolve(_this);
 	        }, function (errorMessage) {
@@ -200,26 +204,17 @@
 	        });
 	    };
 	    Console.prototype.getFile = function (fileName) {
-	        return this.content.files[fileName];
+	        return this.fileSystem.getFile(fileName);
 	    };
-	    Console.prototype.getFileContent = function (fileName) {
-	        var file = this.getFile(fileName);
-	        return file && file.content ? Base64_1.Base64.decode(file.content) : null;
+	    Console.prototype.saveFile = function (fileName, content) {
+	        this.fileSystem.saveFile(fileName, content);
 	    };
 	    /**
 	     * Returns a list of all files inside the console.
 	     * @return {ConsoleFile[]} List of files
 	     */
 	    Console.prototype.getFiles = function () {
-	        if (!this.content.files) {
-	            return [];
-	        }
-	        var files = [];
-	        for (var _i = 0, _a = Object.getOwnPropertyNames(this.content.files); _i < _a.length; _i++) {
-	            var fileName = _a[_i];
-	            files.push(this.content.files[fileName]);
-	        }
-	        return files;
+	        return this.fileSystem.listFiles();
 	    };
 	    /**
 	     * Prints a line on the console.
@@ -233,7 +228,7 @@
 	    Console.prototype.printFile = function (fileName) {
 	        var file = this.getFile(fileName);
 	        if (file) {
-	            this.printLine(Base64_1.Base64.decode(file.content));
+	            this.printLine(file.content);
 	        }
 	        else {
 	            this.printLine("File " + fileName + " not found!");
@@ -285,19 +280,19 @@
 	     * Prints the welcome text if available.
 	     */
 	    Console.prototype.printWelcome = function () {
-	        if (this.content.welcome) {
-	            this.printLine(Base64_1.Base64.decode(this.content.welcome));
+	        if (this.welcomeText) {
+	            this.printLine(Base64_1.Base64.decode(this.welcomeText));
 	        }
 	    };
 	    /**
 	     * Iterate over all executables and register them on the ConsoleEngine;
 	     * @return {[type]} [description]
 	     */
-	    Console.prototype.registerExecutables = function () {
-	        if (this.content.executables) {
+	    Console.prototype.registerExecutables = function (executables) {
+	        if (executables) {
 	            var currentContext = this.getCurrentContext();
-	            for (var _i = 0, _a = this.content.executables; _i < _a.length; _i++) {
-	                var executable = _a[_i];
+	            for (var _i = 0, executables_1 = executables; _i < executables_1.length; _i++) {
+	                var executable = executables_1[_i];
 	                currentContext.registerCommand(executable, new ConsoleExecutableHandler_1.ConsoleExecutableHandler(this, executable));
 	            }
 	        }
@@ -404,6 +399,12 @@
 	                _this.config.onFileChange(change);
 	            });
 	        }
+	    };
+	    ConsoleContext.prototype.getEditorContent = function () {
+	        if (!this.codeMirror) {
+	            return;
+	        }
+	        return this.codeMirror.getValue();
 	    };
 	    ConsoleContext.prototype.isEditorRegistered = function () {
 	        if (!this.codeMirror) {
@@ -1199,7 +1200,6 @@
 
 	"use strict";
 	var CodeEngine_1 = __webpack_require__(22);
-	var Base64_1 = __webpack_require__(19);
 	var ConsoleExecutableHandler = (function () {
 	    function ConsoleExecutableHandler(console, executable) {
 	        this.console = console;
@@ -1211,7 +1211,7 @@
 	            this.console.printLine("Script **" + this.executable.file + "** not found.");
 	            return;
 	        }
-	        var scriptContent = Base64_1.Base64.decode(file.content);
+	        var scriptContent = file.content;
 	        CodeEngine_1.CodeEngine.run({
 	            scripts: [scriptContent],
 	            runNamespace: this.executable.runNamespace,
@@ -56421,14 +56421,67 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var Less_1 = __webpack_require__(32);
-	exports.Less = Less_1.Less;
-	var MarkdownReader_1 = __webpack_require__(33);
-	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
-	var Ls_1 = __webpack_require__(36);
-	exports.Ls = Ls_1.Ls;
-	var Vi_1 = __webpack_require__(37);
-	exports.Vi = Vi_1.Vi;
+	var Base64_1 = __webpack_require__(19);
+	var LocalStorageFileSystem = (function () {
+	    function LocalStorageFileSystem() {
+	    }
+	    LocalStorageFileSystem.prototype.init = function (files) {
+	        this.files = files;
+	    };
+	    LocalStorageFileSystem.prototype.getFile = function (fileName) {
+	        if (!this.files) {
+	            return;
+	        }
+	        var file = this.files[fileName];
+	        if (!file) {
+	            return;
+	        }
+	        var base64Content = this.findUpdatedContent(fileName) || file.content;
+	        return {
+	            name: file.name,
+	            base: file.base,
+	            content: Base64_1.Base64.decode(base64Content),
+	            executable: file.executable,
+	            ext: file.ext,
+	            readable: file.readable,
+	            writeable: file.writeable
+	        };
+	    };
+	    LocalStorageFileSystem.prototype.listFiles = function () {
+	        if (!this.files) {
+	            return [];
+	        }
+	        var copy = [];
+	        for (var fileName in this.files) {
+	            copy.push(this.getFile(fileName));
+	        }
+	        return copy;
+	    };
+	    LocalStorageFileSystem.prototype.saveFile = function (fileName, content) {
+	        if (!content) {
+	            localStorage.removeItem("console-file-content:" + fileName);
+	        }
+	        else {
+	            localStorage.setItem("console-file-content:" + fileName, Base64_1.Base64.encode(content));
+	        }
+	    };
+	    /**
+	     * The actual implementation can check for an up to date file content if available.
+	     * When this method returns null or undefined the default content is used.
+	     *
+	     * @protected
+	     * @abstract
+	     * @param {string} fileName the name of the file to search for
+	     * @returns {string} base64 encoded file content or null.
+	     *
+	     * @memberOf FileSystemBase
+	     */
+	    LocalStorageFileSystem.prototype.findUpdatedContent = function (fileName) {
+	        return localStorage.getItem("console-file-content:" + fileName);
+	    };
+	    return LocalStorageFileSystem;
+	}());
+	exports.LocalStorageFileSystem = LocalStorageFileSystem;
 
 
 /***/ },
@@ -56436,8 +56489,23 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var MarkdownReader_1 = __webpack_require__(33);
-	var JsonReader_1 = __webpack_require__(35);
+	var Less_1 = __webpack_require__(33);
+	exports.Less = Less_1.Less;
+	var MarkdownReader_1 = __webpack_require__(34);
+	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
+	var Ls_1 = __webpack_require__(37);
+	exports.Ls = Ls_1.Ls;
+	var Vi_1 = __webpack_require__(38);
+	exports.Vi = Vi_1.Vi;
+
+
+/***/ },
+/* 33 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var MarkdownReader_1 = __webpack_require__(34);
+	var JsonReader_1 = __webpack_require__(36);
 	/**
 	 * Command to read a file.
 	 */
@@ -56509,7 +56577,7 @@
 
 
 /***/ },
-/* 33 */
+/* 34 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56518,7 +56586,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(34);
+	var ReaderBase_1 = __webpack_require__(35);
 	var MarkdownReader = (function (_super) {
 	    __extends(MarkdownReader, _super);
 	    function MarkdownReader() {
@@ -56534,18 +56602,17 @@
 
 
 /***/ },
-/* 34 */
-/***/ function(module, exports, __webpack_require__) {
+/* 35 */
+/***/ function(module, exports) {
 
 	"use strict";
-	var Base64_1 = __webpack_require__(19);
 	var ReaderBase = (function () {
 	    function ReaderBase(file, console) {
 	        this.file = file;
 	        this.console = console;
 	    }
 	    ReaderBase.prototype.getContent = function () {
-	        return Base64_1.Base64.decode(this.file.content);
+	        return this.file.content;
 	    };
 	    return ReaderBase;
 	}());
@@ -56553,7 +56620,7 @@
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56562,7 +56629,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(34);
+	var ReaderBase_1 = __webpack_require__(35);
 	var JsonReader = (function (_super) {
 	    __extends(JsonReader, _super);
 	    function JsonReader() {
@@ -56578,7 +56645,7 @@
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56638,7 +56705,7 @@
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56669,10 +56736,11 @@
 	            showInput: true,
 	            editable: true,
 	            editorMode: this.modeFromFile(file),
-	            initialContent: this.console.getFileContent(fileName),
+	            initialContent: file.content,
 	            onFileChange: function () { return _this.fileChanged = true; }
 	        });
 	        this.fileChanged = false;
+	        this.fileName = fileName;
 	        this.registerCommands(consoleContext);
 	    };
 	    Vi.prototype.autocomplete = function (args) {
@@ -56702,11 +56770,21 @@
 	        var consoleContext = this.console.getCurrentContext();
 	        var force = commandExecutionContext.arguments && commandExecutionContext.arguments[0] === '!';
 	        if (!this.fileChanged || force) {
+	            this.fileName = null;
+	            this.fileChanged = false;
 	            this.console.closeCurrentContext();
 	        }
 	        else {
 	            this.console.printLine('There are unsaved changes. Save the changes or type **q !** to discard them.');
 	        }
+	    };
+	    Vi.prototype.write = function (commandExecutionContext) {
+	        if (!this.fileChanged) {
+	            return;
+	        }
+	        this.console.saveFile(this.fileName, this.console.getCurrentContext().getEditorContent());
+	        this.fileChanged = false;
+	        this.console.printLine(this.fileName + " persisted");
 	    };
 	    Vi.prototype.registerCommands = function (consoleContext) {
 	        var _this = this;
@@ -56714,6 +56792,17 @@
 	            command: 'q',
 	            helpText: 'Close the current file.'
 	        }, function (context) { return _this.quit(context); });
+	        consoleContext.registerCommand({
+	            command: 'w',
+	            helpText: 'Write the changes to the disk.'
+	        }, function (context) { return _this.write(context); });
+	        consoleContext.registerCommand({
+	            command: 'wq',
+	            helpText: 'Write the changes to the disk and quit the editor.'
+	        }, function (context) {
+	            _this.write(context);
+	            _this.quit(context);
+	        });
 	    };
 	    Vi.command = {
 	        command: 'vi',
@@ -56730,7 +56819,7 @@
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports) {
 
 	"use strict";
