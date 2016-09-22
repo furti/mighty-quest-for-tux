@@ -49,7 +49,7 @@ export class Vi {
             showInput: true,
             editable: true,
             editorMode: this.modeFromFile(file),
-            initialContent: this.console.getFileContent(fileName),
+            initialContent: file.content,
             onFileChange: () => this.fileChanged = true
         });
 

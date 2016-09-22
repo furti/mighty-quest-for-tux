@@ -1,8 +1,8 @@
 export interface ConsoleFile {
     /**
-     * The files content
+     * The files content. The actual type depends on the files type. String or binary data.
      */
-    content: string;
+    content: any;
     /**
      * The files name without extension.
      */
