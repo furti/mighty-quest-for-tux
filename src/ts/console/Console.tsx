@@ -15,6 +15,7 @@ import {Http} from './http/Http'
 import {FileSystem} from './FileSystem'
 import {LocalStorageFileSystem} from './LocalStorageFileSystem'
 import {ConsoleContent} from './ConsoleContent'
+import {ConsoleTimedEvent} from './ConsoleTimedEvent'
 
 import * as commands from './commands/AllCommands'
 
@@ -36,6 +37,12 @@ export class Console {
     private fileSystem: FileSystem;
     private welcomeText: string;
 
+    private timedDefered: Q.Deferred<ConsoleTimedEvent>;
+    private timedExecutionIndex: number;
+    private timedEvent: ConsoleTimedEvent;
+
+    private additionalCommandData: { [name: string]: any };
+
     /**
      * Constructs a new console with the given name.
      * @param  {string} consoleName The name of the console is used to load the content for the console from the server. The URL constructed is /console/<consoleName>.
@@ -46,6 +53,7 @@ export class Console {
         this.contexts = [];
         this.events = new Events();
         this.fileSystem = fileSystem || new LocalStorageFileSystem();
+        this.additionalCommandData = {};
     }
 
     /**
@@ -108,6 +116,17 @@ export class Console {
         this.events.fire(event, data);
     }
 
+    public registerAdditionalCommandData(name: string, data: any) {
+        this.additionalCommandData[name] = data;
+
+        //Register the data on all existing contexts.
+        if (this.contexts) {
+            this.contexts.forEach(context => {
+                context.registerAdditionalData(name, data);
+            });
+        }
+    }
+
     /**
      * Loads the content for the console.
      */
@@ -163,6 +182,21 @@ export class Console {
         }
     }
 
+    public runTimed(executions: any[], timeoutInMillis: number): Q.Promise<ConsoleTimedEvent> {
+        if (!executions) {
+            return Q.when(null);
+        }
+
+        this.timedExecutionIndex = 0;
+        this.timedDefered = Q.defer<ConsoleTimedEvent>();
+        let promise = this.timedDefered.promise;
+        this.timedEvent = new ConsoleTimedEvent();
+
+        this.runNextExecution(executions, timeoutInMillis);
+
+        return promise;
+    }
+
     public executeCommand(command: string): void {
         this.getCurrentContext().executeCommand(command);
     }
@@ -174,8 +208,8 @@ export class Console {
     public close(): void {
         this.events.fire(ConsoleEvent.CLOSE);
 
-        while (this.getCurrentContext()) {
-            this.closeCurrentContext();
+        while (this.contexts.length > 0) {
+            this.destroyCurrentContext();
         }
 
         this.running = false;
@@ -183,6 +217,12 @@ export class Console {
 
     public startContext(config: ConsoleContextConfig): ConsoleContext {
         var newContext = new ConsoleContext(this.contexts.length, this, config);
+
+        if (this.additionalCommandData) {
+            for (let name in this.additionalCommandData) {
+                newContext.registerAdditionalData(name, this.additionalCommandData[name]);
+            }
+        }
 
         this.contexts.push(newContext);
         this.setCurrentContext();
@@ -196,8 +236,51 @@ export class Console {
      */
     public closeCurrentContext(): void {
         if (this.contexts.length > 1) {
-            this.contexts.pop().destroy();
+            this.destroyCurrentContext();
             this.setCurrentContext();
+        }
+    }
+
+    private destroyCurrentContext(): void {
+        this.contexts.pop().destroy();
+    }
+
+    private runNextExecution(executions: any[], timeoutInMillis: number): void {
+        //Last entry was processed --> end
+        if (executions.length === this.timedExecutionIndex) {
+            this.timedDefered.resolve(this.timedEvent);
+
+            this.timedEvent = null;
+            this.timedExecutionIndex = 0;
+            this.timedDefered = null;
+
+            return;
+        }
+
+        let execution = executions[this.timedExecutionIndex];
+
+        if (typeof execution === 'string') {
+            this.printLine(execution);
+        }
+        else {
+            let line = execution(this.timedEvent);
+
+            if (line) {
+                this.printLine(line);
+            }
+        }
+
+        if (this.timedEvent.isCanceled()) {
+            this.timedDefered.reject(this.timedEvent);
+
+            this.timedEvent = null;
+            this.timedExecutionIndex = 0;
+            this.timedDefered = null;
+        }
+        else {
+            this.timedExecutionIndex++;
+
+            window.setTimeout(() => this.runNextExecution(executions, timeoutInMillis), timeoutInMillis);
         }
     }
 

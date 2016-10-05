@@ -50,10 +50,18 @@ return (function(){
     private static buildCommandParams(runConfig: RunConfig): CommandParams {
         Logger.debug('CodeEngine', 'runconfig: %o', runConfig);
 
-        return {
+        let commandParams: CommandParams = {
             console: runConfig.console,
             arguments: runConfig.context.arguments || []
+        };
+
+        if (runConfig.additionalData) {
+            for (let name in runConfig.additionalData) {
+                commandParams[name] = runConfig.additionalData[name];
+            }
         }
+
+        return commandParams;
     }
 
     private static transpile(runConfig: RunConfig): string[] {

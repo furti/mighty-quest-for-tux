@@ -12,4 +12,9 @@ export interface CommandParams {
      * @type {string[]}
      */
     arguments: any[];
+
+    /**
+     * The implementation can add additional data to pass to each command
+     */
+    [name: string]: any;
 }

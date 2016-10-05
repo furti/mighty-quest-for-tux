@@ -15,14 +15,17 @@ namespace intro.connect {
 
     class Connect {
         private console: console.Console;
+        private levelManager: console.LevelManager;
 
         constructor(private commandParams: console.CommandParams) {
             this.console = commandParams.console;
+            this.levelManager = commandParams['levelManager'];
         }
 
         public start(): void {
             let consoleContext = this.console.startContext({
-                showInput: true
+                showInput: true,
+                editable: false
             });
 
             this.registerCommands(consoleContext);
@@ -35,7 +38,17 @@ namespace intro.connect {
             this.console.printLine(`Enter the name of the server in the textfield below and press the enter key to connect to the server.`);
             this.console.printLine('');
 
-            let serverList = servers.map(server => `1. servername: ${server.name} - ${server.description}`).join('\n');
+            let serverList = servers.map(server => {
+                let description = `1. servername: ${server.name} - ${server.description}`
+
+                let savedLevel = this.levelManager.getLevel(server.folder);
+
+                if (savedLevel && savedLevel.finished) {
+                    description += ' - [green]done[/green]';
+                }
+
+                return description;
+            }).join('\n');
 
             this.console.printLine(serverList);
         }

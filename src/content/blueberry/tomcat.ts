@@ -50,7 +50,7 @@ namespace blueberry.tomcat {
 
         if (commandParams.arguments[0] === 'status') {
             applications.forEach(application => {
-                let content = console.getFileContent(`${application.name}-config.json`);
+                let content = console.getFile(`${application.name}-config.json`).content;
 
                 let config = JSON.parse(content);
 
@@ -59,6 +59,53 @@ namespace blueberry.tomcat {
         }
         else if (commandParams.arguments[0] === 'restart') {
             let application: string = commandParams.arguments[1];
+
+            console.runTimed([
+                `Parse config for application ${application}`,
+
+                (event: console.ConsoleTimedEvent) => {
+                    let configFile = console.getFile(`${application}-config.json`);
+
+                    if (!configFile) {
+                        event.cancel();
+
+                        return `[red]Application ${application} does not exist[/red]`;
+                    }
+                    else {
+                        event.setProperty('config', JSON.parse(configFile.content));
+                    }
+                },
+
+                `Shutting down application ${application}`,
+
+                `Waiting for application to free ports`,
+
+                `Applying new configuration`,
+
+                `Starting application ${application}`,
+
+                (event: console.ConsoleTimedEvent) => {
+                    let config: any = event.getProperty('config');
+
+                    if (application !== 'alister') {
+                        event.cancel();
+                        return `[red]D'OH! You restarted the wrong application.
+                        <b>Don't restart healthy applications in a production environment!!</b>[/red]`;
+                    }
+
+                    if (config.memory !== '1GB') {
+                        event.cancel();
+
+                        return `[red]Maybe you should check the memory for the application again. It seems that it is not set to the asked value![/red]`;
+                    }
+                }
+            ], 1000).then((event: console.ConsoleTimedEvent) => {
+                console.printLine('[green]Well done. You reconfigured the application. Everything is running fine now.[/green]');
+
+                console.printLine('Type **disconnect** to leave the server.');
+
+                console.fire('level.complete', 'blueberry');
+            });
         }
         else {
             console.printLine(`Unknown argument ${commandParams.arguments[0]}`);

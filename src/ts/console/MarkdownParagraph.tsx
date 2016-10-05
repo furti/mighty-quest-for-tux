@@ -8,10 +8,16 @@ import {Logger} from './Logger';
 const markdownRenderer = new marked.Renderer();
 
 markdownRenderer.paragraph = (text): string => {
-    Logger.debug('Markdown', text);
+    Logger.debug('Markdown paragraph', text);
 
-    return MarkdownParagraphParser.parse(text);
+    return `<p>${MarkdownParagraphParser.parse(text)}</p>`;
 }
+
+markdownRenderer.listitem = (text: string): string => {
+    Logger.debug('Markdown listitem', text);
+
+    return `<li>${MarkdownParagraphParser.parse(text)}</li>`;
+};
 
 export class MarkdownParagraph extends Component<MarkdownParagraphProps, {}>{
 

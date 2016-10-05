@@ -1,6 +1,6 @@
 
 Start
- = text:Paragraph { return '<p>' + text + '</p>'}
+ = text:Paragraph { return text}
 
 Paragraph
   = content:Content* {return content.join("") }

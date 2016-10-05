@@ -1,5 +1,6 @@
 {
     "memory": "1GB",
     "encoding": "UTF-8",
-    "port": "8020"
+    "port": "8020",
+    "securePort": "8023"
 }

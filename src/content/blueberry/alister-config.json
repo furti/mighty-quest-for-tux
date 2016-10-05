@@ -1,5 +1,6 @@
 {
     "memory": "500MB",
     "encoding": "UTF-8",
-    "port": "8000"
+    "port": "8000",
+    "securePort": "8003"
 }
