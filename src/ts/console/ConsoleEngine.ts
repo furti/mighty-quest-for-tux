@@ -12,6 +12,7 @@ import { ParsedCommand } from './ParsedCommand';
  */
 export class ConsoleEngine {
     private commands: { [command: string]: CommandExecutor };
+    private additionalData: { [name: string]: any };
 
     constructor(private console: Console) {
         this.commands = {};
@@ -24,6 +25,22 @@ export class ConsoleEngine {
      */
     public registerCommand(command: Command, handler: CommandHandler, autocompleteHandler?: AutocompleteHandler): void {
         this.commands[command.command] = new CommandExecutor(command, handler, autocompleteHandler);
+    }
+
+    /**
+     * Add data to pass to each executed command.
+     * 
+     * @param {string} name the name of the data object to add
+     * @param {*} data the actual data
+     * 
+     * @memberOf ConsoleEngine
+     */
+    public registerAdditionalData(name: string, data: any): void {
+        if (!this.additionalData) {
+            this.additionalData = {};
+        }
+
+        this.additionalData[name] = data;
     }
 
     /**
@@ -61,7 +78,7 @@ export class ConsoleEngine {
         }
 
         try {
-            this.commands[parsedCommand.command].execute(parsedCommand);
+            this.commands[parsedCommand.command].execute(parsedCommand, this.additionalData);
 
             return {
                 state: CommandExecutionState.Success,
@@ -201,9 +218,10 @@ class CommandExecutor {
         this.autocompleteHandler = autocompleteHandler;
     }
 
-    public execute(parsedCommand: ParsedCommand): void {
+    public execute(parsedCommand: ParsedCommand, additionalData: { [name: string]: any }): void {
         var context = {
-            arguments: parsedCommand.arguments
+            arguments: parsedCommand.arguments,
+            additionalData: additionalData
         };
 
         if (typeof this.handler === 'function') {

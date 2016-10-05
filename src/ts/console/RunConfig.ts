@@ -6,4 +6,5 @@ export interface RunConfig {
     runNamespace: string;
     console: Console;
     context: CommandExecutionContext;
+    additionalData?: { [name: string]: any };
 }

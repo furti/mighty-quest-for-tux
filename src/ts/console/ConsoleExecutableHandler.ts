@@ -26,7 +26,8 @@ export class ConsoleExecutableHandler {
             scripts: [scriptContent],
             runNamespace: this.executable.runNamespace,
             console: this.console,
-            context: context
+            context: context,
+            additionalData: context.additionalData
         });
     }
 }

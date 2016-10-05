@@ -23,6 +23,10 @@ export class LevelManager {
         this.persist();
     }
 
+    public getLevel(levelName: string): SavedLevel {
+        return this.levels[levelName];
+    }
+
     private persist(): void {
         let levelsAsString = JSON.stringify(this.levels);
 

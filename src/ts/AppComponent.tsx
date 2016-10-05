@@ -9,6 +9,8 @@ let console = new Console('dist/content');
 let levelManager = new LevelManager();
 levelManager.init();
 
+console.registerAdditionalCommandData('levelManager', levelManager);
+
 
 console.on('server.connect', (folder: string) => {
     console.close();

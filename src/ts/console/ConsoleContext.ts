@@ -30,6 +30,10 @@ export class ConsoleContext {
         this.consoleEngine.registerCommand(command, handler, autocompleteHandler);
     }
 
+    public registerAdditionalData(name: string, data: any) {
+        this.consoleEngine.registerAdditionalData(name, data);
+    }
+
     public executeCommand(commandString: string): void {
         var result = this.consoleEngine.execute(commandString)
 

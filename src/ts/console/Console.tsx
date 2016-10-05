@@ -41,6 +41,8 @@ export class Console {
     private timedExecutionIndex: number;
     private timedEvent: ConsoleTimedEvent;
 
+    private additionalCommandData: { [name: string]: any };
+
     /**
      * Constructs a new console with the given name.
      * @param  {string} consoleName The name of the console is used to load the content for the console from the server. The URL constructed is /console/<consoleName>.
@@ -51,6 +53,7 @@ export class Console {
         this.contexts = [];
         this.events = new Events();
         this.fileSystem = fileSystem || new LocalStorageFileSystem();
+        this.additionalCommandData = {};
     }
 
     /**
@@ -111,6 +114,17 @@ export class Console {
 
     public fire(event: string, data?: any): void {
         this.events.fire(event, data);
+    }
+
+    public registerAdditionalCommandData(name: string, data: any) {
+        this.additionalCommandData[name] = data;
+
+        //Register the data on all existing contexts.
+        if (this.contexts) {
+            this.contexts.forEach(context => {
+                context.registerAdditionalData(name, data);
+            });
+        }
     }
 
     /**
@@ -203,6 +217,12 @@ export class Console {
 
     public startContext(config: ConsoleContextConfig): ConsoleContext {
         var newContext = new ConsoleContext(this.contexts.length, this, config);
+
+        if (this.additionalCommandData) {
+            for (let name in this.additionalCommandData) {
+                newContext.registerAdditionalData(name, this.additionalCommandData[name]);
+            }
+        }
 
         this.contexts.push(newContext);
         this.setCurrentContext();
