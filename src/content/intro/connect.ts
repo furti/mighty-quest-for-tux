@@ -22,7 +22,8 @@ namespace intro.connect {
 
         public start(): void {
             let consoleContext = this.console.startContext({
-                showInput: true
+                showInput: true,
+                editable: false
             });
 
             this.registerCommands(consoleContext);

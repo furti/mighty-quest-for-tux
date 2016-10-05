@@ -3,8 +3,11 @@ import * as React from 'react';
 import { Component } from 'react';
 import { Console } from './console/Console';
 import { Disconnect } from './DisconnectCommand';
+import { LevelManager } from './LevelManager';
 
 let console = new Console('dist/content');
+let levelManager = new LevelManager();
+levelManager.init();
 
 
 console.on('server.connect', (folder: string) => {
@@ -20,7 +23,7 @@ console.on('server.disconnected', () => {
 });
 
 console.on('level.complete', (levelName: string) => {
-    alert(`${levelName} complete`);
+    levelManager.levelCompleted(levelName);
 });
 
 console.start('intro');
