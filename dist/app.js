@@ -75,8 +75,12 @@
 	};
 	var React = __webpack_require__(1);
 	var Console_1 = __webpack_require__(4);
-	var DisconnectCommand_1 = __webpack_require__(39);
+	var DisconnectCommand_1 = __webpack_require__(40);
+	var LevelManager_1 = __webpack_require__(41);
 	var console = new Console_1.Console('dist/content');
+	var levelManager = new LevelManager_1.LevelManager();
+	levelManager.init();
+	console.registerAdditionalCommandData('levelManager', levelManager);
 	console.on('server.connect', function (folder) {
 	    console.close();
 	    console.start(folder).then(function () {
@@ -88,7 +92,7 @@
 	    console.start('intro');
 	});
 	console.on('level.complete', function (levelName) {
-	    alert(levelName + " complete");
+	    levelManager.levelCompleted(levelName);
 	});
 	console.start('intro');
 	var AppComponent = (function (_super) {
@@ -119,7 +123,8 @@
 	var ConsoleExecutableHandler_1 = __webpack_require__(21);
 	var Http_1 = __webpack_require__(28);
 	var LocalStorageFileSystem_1 = __webpack_require__(31);
-	var commands = __webpack_require__(32);
+	var ConsoleTimedEvent_1 = __webpack_require__(32);
+	var commands = __webpack_require__(33);
 	/**
 	 * The Console that is used for interacting with the user.
 	 *
@@ -136,6 +141,7 @@
 	        this.contexts = [];
 	        this.events = new Events_1.Events();
 	        this.fileSystem = fileSystem || new LocalStorageFileSystem_1.LocalStorageFileSystem();
+	        this.additionalCommandData = {};
 	    }
 	    /**
 	     * This method displays the console. This method can safely be called at any time.
@@ -188,6 +194,15 @@
 	    Console.prototype.fire = function (event, data) {
 	        this.events.fire(event, data);
 	    };
+	    Console.prototype.registerAdditionalCommandData = function (name, data) {
+	        this.additionalCommandData[name] = data;
+	        //Register the data on all existing contexts.
+	        if (this.contexts) {
+	            this.contexts.forEach(function (context) {
+	                context.registerAdditionalData(name, data);
+	            });
+	        }
+	    };
 	    /**
 	     * Loads the content for the console.
 	     */
@@ -234,6 +249,17 @@
 	            this.printLine("File " + fileName + " not found!");
 	        }
 	    };
+	    Console.prototype.runTimed = function (executions, timeoutInMillis) {
+	        if (!executions) {
+	            return Q.when(null);
+	        }
+	        this.timedExecutionIndex = 0;
+	        this.timedDefered = Q.defer();
+	        var promise = this.timedDefered.promise;
+	        this.timedEvent = new ConsoleTimedEvent_1.ConsoleTimedEvent();
+	        this.runNextExecution(executions, timeoutInMillis);
+	        return promise;
+	    };
 	    Console.prototype.executeCommand = function (command) {
 	        this.getCurrentContext().executeCommand(command);
 	    };
@@ -242,13 +268,18 @@
 	    };
 	    Console.prototype.close = function () {
 	        this.events.fire(ConsoleEvent_1.ConsoleEvent.CLOSE);
-	        while (this.getCurrentContext()) {
-	            this.closeCurrentContext();
+	        while (this.contexts.length > 0) {
+	            this.destroyCurrentContext();
 	        }
 	        this.running = false;
 	    };
 	    Console.prototype.startContext = function (config) {
 	        var newContext = new ConsoleContext_1.ConsoleContext(this.contexts.length, this, config);
+	        if (this.additionalCommandData) {
+	            for (var name_1 in this.additionalCommandData) {
+	                newContext.registerAdditionalData(name_1, this.additionalCommandData[name_1]);
+	            }
+	        }
 	        this.contexts.push(newContext);
 	        this.setCurrentContext();
 	        return newContext;
@@ -259,8 +290,42 @@
 	     */
 	    Console.prototype.closeCurrentContext = function () {
 	        if (this.contexts.length > 1) {
-	            this.contexts.pop().destroy();
+	            this.destroyCurrentContext();
 	            this.setCurrentContext();
+	        }
+	    };
+	    Console.prototype.destroyCurrentContext = function () {
+	        this.contexts.pop().destroy();
+	    };
+	    Console.prototype.runNextExecution = function (executions, timeoutInMillis) {
+	        var _this = this;
+	        //Last entry was processed --> end
+	        if (executions.length === this.timedExecutionIndex) {
+	            this.timedDefered.resolve(this.timedEvent);
+	            this.timedEvent = null;
+	            this.timedExecutionIndex = 0;
+	            this.timedDefered = null;
+	            return;
+	        }
+	        var execution = executions[this.timedExecutionIndex];
+	        if (typeof execution === 'string') {
+	            this.printLine(execution);
+	        }
+	        else {
+	            var line = execution(this.timedEvent);
+	            if (line) {
+	                this.printLine(line);
+	            }
+	        }
+	        if (this.timedEvent.isCanceled()) {
+	            this.timedDefered.reject(this.timedEvent);
+	            this.timedEvent = null;
+	            this.timedExecutionIndex = 0;
+	            this.timedDefered = null;
+	        }
+	        else {
+	            this.timedExecutionIndex++;
+	            window.setTimeout(function () { return _this.runNextExecution(executions, timeoutInMillis); }, timeoutInMillis);
 	        }
 	    };
 	    Console.prototype.rerenderView = function () {
@@ -360,6 +425,9 @@
 	    ConsoleContext.prototype.registerCommand = function (command, handler, autocompleteHandler) {
 	        this.consoleEngine.registerCommand(command, handler, autocompleteHandler);
 	    };
+	    ConsoleContext.prototype.registerAdditionalData = function (name, data) {
+	        this.consoleEngine.registerAdditionalData(name, data);
+	    };
 	    ConsoleContext.prototype.executeCommand = function (commandString) {
 	        var result = this.consoleEngine.execute(commandString);
 	        if (result.state === CommandExecutionState_1.CommandExecutionState.Error) {
@@ -440,6 +508,20 @@
 	        this.commands[command.command] = new CommandExecutor(command, handler, autocompleteHandler);
 	    };
 	    /**
+	     * Add data to pass to each executed command.
+	     *
+	     * @param {string} name the name of the data object to add
+	     * @param {*} data the actual data
+	     *
+	     * @memberOf ConsoleEngine
+	     */
+	    ConsoleEngine.prototype.registerAdditionalData = function (name, data) {
+	        if (!this.additionalData) {
+	            this.additionalData = {};
+	        }
+	        this.additionalData[name] = data;
+	    };
+	    /**
 	     * Parses the given commandString and executes the associated command
 	     * @param {string} commandString the command to parse
 	     */
@@ -468,7 +550,7 @@
 	            };
 	        }
 	        try {
-	            this.commands[parsedCommand.command].execute(parsedCommand);
+	            this.commands[parsedCommand.command].execute(parsedCommand, this.additionalData);
 	            return {
 	                state: CommandExecutionState_1.CommandExecutionState.Success,
 	                command: parsedCommand
@@ -579,9 +661,10 @@
 	        this.handler = handler;
 	        this.autocompleteHandler = autocompleteHandler;
 	    }
-	    CommandExecutor.prototype.execute = function (parsedCommand) {
+	    CommandExecutor.prototype.execute = function (parsedCommand, additionalData) {
 	        var context = {
-	            arguments: parsedCommand.arguments
+	            arguments: parsedCommand.arguments,
+	            additionalData: additionalData
 	        };
 	        if (typeof this.handler === 'function') {
 	            this.handler(context);
@@ -1060,8 +1143,12 @@
 	var Logger_1 = __webpack_require__(10);
 	var markdownRenderer = new marked.Renderer();
 	markdownRenderer.paragraph = function (text) {
-	    Logger_1.Logger.debug('Markdown', text);
-	    return MarkdownParagraphParser.parse(text);
+	    Logger_1.Logger.debug('Markdown paragraph', text);
+	    return "<p>" + MarkdownParagraphParser.parse(text) + "</p>";
+	};
+	markdownRenderer.listitem = function (text) {
+	    Logger_1.Logger.debug('Markdown listitem', text);
+	    return "<li>" + MarkdownParagraphParser.parse(text) + "</li>";
 	};
 	var MarkdownParagraph = (function (_super) {
 	    __extends(MarkdownParagraph, _super);
@@ -1216,7 +1303,8 @@
 	            scripts: [scriptContent],
 	            runNamespace: this.executable.runNamespace,
 	            console: this.console,
-	            context: context
+	            context: context,
+	            additionalData: context.additionalData
 	        });
 	    };
 	    return ConsoleExecutableHandler;
@@ -1254,10 +1342,16 @@
 	    };
 	    CodeEngine.buildCommandParams = function (runConfig) {
 	        Logger_1.Logger.debug('CodeEngine', 'runconfig: %o', runConfig);
-	        return {
+	        var commandParams = {
 	            console: runConfig.console,
 	            arguments: runConfig.context.arguments || []
 	        };
+	        if (runConfig.additionalData) {
+	            for (var name_1 in runConfig.additionalData) {
+	                commandParams[name_1] = runConfig.additionalData[name_1];
+	            }
+	        }
+	        return commandParams;
 	    };
 	    CodeEngine.transpile = function (runConfig) {
 	        var jsSources = [];
@@ -56486,17 +56580,29 @@
 
 /***/ },
 /* 32 */
-/***/ function(module, exports, __webpack_require__) {
+/***/ function(module, exports) {
 
 	"use strict";
-	var Less_1 = __webpack_require__(33);
-	exports.Less = Less_1.Less;
-	var MarkdownReader_1 = __webpack_require__(34);
-	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
-	var Ls_1 = __webpack_require__(37);
-	exports.Ls = Ls_1.Ls;
-	var Vi_1 = __webpack_require__(38);
-	exports.Vi = Vi_1.Vi;
+	var ConsoleTimedEvent = (function () {
+	    function ConsoleTimedEvent() {
+	        this.canceled = false;
+	        this.properties = {};
+	    }
+	    ConsoleTimedEvent.prototype.cancel = function () {
+	        this.canceled = true;
+	    };
+	    ConsoleTimedEvent.prototype.isCanceled = function () {
+	        return this.canceled;
+	    };
+	    ConsoleTimedEvent.prototype.setProperty = function (name, value) {
+	        this.properties[name] = value;
+	    };
+	    ConsoleTimedEvent.prototype.getProperty = function (name) {
+	        return this.properties[name];
+	    };
+	    return ConsoleTimedEvent;
+	}());
+	exports.ConsoleTimedEvent = ConsoleTimedEvent;
 
 
 /***/ },
@@ -56504,8 +56610,23 @@
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
-	var MarkdownReader_1 = __webpack_require__(34);
-	var JsonReader_1 = __webpack_require__(36);
+	var Less_1 = __webpack_require__(34);
+	exports.Less = Less_1.Less;
+	var MarkdownReader_1 = __webpack_require__(35);
+	exports.MarkdownReader = MarkdownReader_1.MarkdownReader;
+	var Ls_1 = __webpack_require__(38);
+	exports.Ls = Ls_1.Ls;
+	var Vi_1 = __webpack_require__(39);
+	exports.Vi = Vi_1.Vi;
+
+
+/***/ },
+/* 34 */
+/***/ function(module, exports, __webpack_require__) {
+
+	"use strict";
+	var MarkdownReader_1 = __webpack_require__(35);
+	var JsonReader_1 = __webpack_require__(37);
 	/**
 	 * Command to read a file.
 	 */
@@ -56577,7 +56698,7 @@
 
 
 /***/ },
-/* 34 */
+/* 35 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56586,7 +56707,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(35);
+	var ReaderBase_1 = __webpack_require__(36);
 	var MarkdownReader = (function (_super) {
 	    __extends(MarkdownReader, _super);
 	    function MarkdownReader() {
@@ -56602,7 +56723,7 @@
 
 
 /***/ },
-/* 35 */
+/* 36 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56620,7 +56741,7 @@
 
 
 /***/ },
-/* 36 */
+/* 37 */
 /***/ function(module, exports, __webpack_require__) {
 
 	"use strict";
@@ -56629,7 +56750,7 @@
 	    function __() { this.constructor = d; }
 	    d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());
 	};
-	var ReaderBase_1 = __webpack_require__(35);
+	var ReaderBase_1 = __webpack_require__(36);
 	var JsonReader = (function (_super) {
 	    __extends(JsonReader, _super);
 	    function JsonReader() {
@@ -56645,7 +56766,7 @@
 
 
 /***/ },
-/* 37 */
+/* 38 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56705,7 +56826,7 @@
 
 
 /***/ },
-/* 38 */
+/* 39 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56819,7 +56940,7 @@
 
 
 /***/ },
-/* 39 */
+/* 40 */
 /***/ function(module, exports) {
 
 	"use strict";
@@ -56837,6 +56958,46 @@
 	    return Disconnect;
 	}());
 	exports.Disconnect = Disconnect;
+
+
+/***/ },
+/* 41 */
+/***/ function(module, exports) {
+
+	"use strict";
+	var LevelManager = (function () {
+	    function LevelManager() {
+	    }
+	    LevelManager.prototype.init = function () {
+	        var levelAsString = localStorage.getItem(LevelManager.SAVEGAME_KEY);
+	        if (levelAsString) {
+	            this.levels = JSON.parse(levelAsString);
+	        }
+	        else {
+	            this.levels = {};
+	        }
+	    };
+	    LevelManager.prototype.levelCompleted = function (levelName) {
+	        this.getOrCreateLevel(levelName).finished = true;
+	        this.persist();
+	    };
+	    LevelManager.prototype.getLevel = function (levelName) {
+	        return this.levels[levelName];
+	    };
+	    LevelManager.prototype.persist = function () {
+	        var levelsAsString = JSON.stringify(this.levels);
+	        localStorage.setItem(LevelManager.SAVEGAME_KEY, levelsAsString);
+	    };
+	    LevelManager.prototype.getOrCreateLevel = function (levelName) {
+	        if (!this.levels[levelName]) {
+	            this.levels[levelName] = {};
+	        }
+	        return this.levels[levelName];
+	    };
+	    LevelManager.SAVEGAME_KEY = 'mightyquest.savegame';
+	    return LevelManager;
+	}());
+	exports.LevelManager = LevelManager;
 
 
 /***/ }

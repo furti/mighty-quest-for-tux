@@ -141,7 +141,7 @@
         peg$startRuleFunctions = { Start: peg$parseStart },
         peg$startRuleFunction  = peg$parseStart,
 
-        peg$c0 = function(text) { return '<p>' + text + '</p>'},
+        peg$c0 = function(text) { return text},
         peg$c1 = function(content) {return content.join("") },
         peg$c2 = /^[[\]]/,
         peg$c3 = peg$classExpectation(["[", "]"], false, false),
